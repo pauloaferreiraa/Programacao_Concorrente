@@ -29,7 +29,10 @@ room(Pids) ->
       room(maps:put(Pid, Sock, Pids));
     {line, Data, Sock} ->
       {Pi, _Soc} = find_by_value(Sock, Pids),
-
+      case gen_tcp:send(Sock,<<"teste">>) of
+        ok -> io:format("Sucesso!");
+        _ -> io:format("Insucesso!")
+      end,
       StrData = binary:bin_to_list(Data),
       case StrData of
         "\\login " ++ Dados ->

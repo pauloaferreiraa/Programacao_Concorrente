@@ -15,10 +15,8 @@ public class Message extends Thread{
     public void run(){
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(pingSocket.getInputStream()));
-            System.out.println("Entrou");
             //if(in.readLine().equals("ok"));{
-            while(in.readLine() != null)
-              System.out.println("Output = " + in.readLine());
+            System.out.println("Output = " + in.readLine());
             
         }catch (Exception e){
             e.printStackTrace();
