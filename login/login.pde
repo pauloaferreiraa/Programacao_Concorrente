@@ -76,7 +76,8 @@ void setup(){
                     public void controlEvent(CallbackEvent theEvent) {
                       c1.login(cp5.get(Textfield.class,"Username").getText(),cp5.get(Textfield.class,"Password").getText());
                       cp5.hide();
-                      state = game_screen;                      
+                      state = game_screen;
+                      
                     }
                   });
        

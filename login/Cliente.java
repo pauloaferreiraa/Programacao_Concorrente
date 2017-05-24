@@ -11,7 +11,7 @@ public class Cliente{
         Scanner st = new Scanner(System.in);
 
         try {
-            pingSocket = new Socket("localhost", 1234);
+            pingSocket = new Socket("localhost", 12345);
         }catch (ConnectException e) {
             throw e;
         } catch(Exception e){

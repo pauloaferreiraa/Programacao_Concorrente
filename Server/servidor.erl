@@ -29,19 +29,19 @@ room(Pids) ->
       room(maps:put(Pid, Sock, Pids));
     {line, Data, Sock} ->
       {Pi, _Soc} = find_by_value(Sock, Pids),
-      case gen_tcp:send(Sock,<<"teste">>) of
-        ok -> io:format("Sucesso!");
-        _ -> io:format("Insucesso!")
-      end,
+
       StrData = binary:bin_to_list(Data),
       case StrData of
         "\\login " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
           case login(U, P, Pi) of
-            ok -> 
-              gen_tcp:send(Sock,<<"ok">>);           
-            invalid -> gen_tcp:send(Sock,<<"invalid">>) 
+            ok ->
+              io:format("Conta existe~n"), 
+              gen_tcp:send(Sock,<<"ok\n">>);           
+            invalid ->
+              io:format("Conta nao existe~n"),
+              gen_tcp:send(Sock,<<"invalid\n">>) 
           end;
         "\\create_account " ++ Dados ->
           St = string:tokens(Dados, " "),
