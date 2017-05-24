@@ -10,6 +10,7 @@ ControlP5 cp5;
 //screens
 final int main_screen = 0;
 final int login_screen = 1;
+final int game_screen = 2;
 int state = main_screen;
 
 final int button_width = 150;
@@ -18,6 +19,7 @@ final int textfield_width = 150;
 final int textfield_height = 50;
 
 Cliente c1 = null;
+Message m = null;
 
 void setup(){
     cp5 = new ControlP5(this);
@@ -39,6 +41,8 @@ void setup(){
                       //Caso o servidor nao esteja ligado, o connect vai dar exceçao e nao muda o estado
                       try{
                         c1.connect();
+                        m = new Message(c1.getPingSocket());
+                        m.start();
                         state = login_screen;
                       }catch(Exception e){
                         state = main_screen;
@@ -71,7 +75,8 @@ void setup(){
                  .onPress(new CallbackListener() { //Eventhandler do botao da pagina inicial main_screen
                     public void controlEvent(CallbackEvent theEvent) {
                       c1.login(cp5.get(Textfield.class,"Username").getText(),cp5.get(Textfield.class,"Password").getText());
-                      
+                      cp5.hide();
+                      state = game_screen;                      
                     }
                   });
        
@@ -82,7 +87,8 @@ void setup(){
                  .onPress(new CallbackListener() { //Eventhandler do botao da pagina inicial main_screen
                     public void controlEvent(CallbackEvent theEvent) {
                       c1.create_account(cp5.get(Textfield.class,"Username").getText(),cp5.get(Textfield.class,"Password").getText());
-                      
+                      cp5.hide();
+                      state = game_screen;
                     }
                   });
                   
@@ -100,7 +106,16 @@ void setup(){
                        }
                  });
                  
-    
+    cp5.addButton("Close Account") //Botao da pagina inicial, main_screen
+                 .setValue(0).setColorBackground(color(200)).setFont(pfont)
+                 .setPosition((width/2)+70,(height/2)+70)
+                 .setSize(button_width+20,button_height).hide()
+                 .onPress(new CallbackListener() { //Eventhandler do botao da pagina inicial main_screen
+                    public void controlEvent(CallbackEvent theEvent) {
+                      c1.close_account(cp5.get(Textfield.class,"Username").getText(),cp5.get(Textfield.class,"Password").getText());
+                      
+                    }
+                  });
      
     
                   
@@ -128,6 +143,7 @@ void show_main_screen(){
     cp5.getController("Connect").show();
     cp5.getController("Login").hide();
     cp5.getController("New account").hide();
+    cp5.getController("Close Account").hide();
     cp5.getController("Username").hide();
     cp5.getController("Password").hide();
     cp5.getController("Disconnect").hide();
@@ -145,15 +161,22 @@ void show_login(){
   
   cp5.getController("Login").show();
   cp5.getController("New account").show();
+  cp5.getController("Close Account").show();
   cp5.getController("Username").show();
   cp5.getController("Password").show();
   cp5.getController("Disconnect").show();
 }
 
+void show_game_screen(){
+  
+}
 
-
-void controlEvent(ControlEvent theEvent) {
-   
+void keyPressed(){
+  if(state == game_screen){
+    if(keyCode == UP){
+      c1.sendMessage("\\walk");
+    }
+  }
 }
 
   

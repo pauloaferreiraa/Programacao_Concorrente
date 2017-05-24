@@ -1,5 +1,3 @@
-
-
 import java.net.*;
 import java.io.*;
 import java.util.Scanner;
@@ -49,6 +47,18 @@ public class Cliente{
             e.printStackTrace();
         }
     }
+    
+    public void sendMessage(String message){
+        try{
+            PrintWriter out = new PrintWriter(pingSocket.getOutputStream());
+            out.println(message);
+            out.flush();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public Socket getPingSocket(){return pingSocket;}
 
 
 }
