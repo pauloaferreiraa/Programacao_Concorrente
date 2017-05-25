@@ -8,49 +8,48 @@ start() ->
 %map começa vazio no ciclo
 
 
-create_account(Username, Passwd, Pid) ->
-  ?MODULE ! {create_account, Username, Passwd, self(), Pid},
+create_account(Username, Passwd, Sock) ->
+  ?MODULE ! {create_account, Username, Passwd, self(), Sock},
   receive {?MODULE, Res} -> Res end.
 
-close_account(Username, Passwd, Pid) ->
-  ?MODULE ! {close_account, Username, Passwd, self(), Pid},
+close_account(Username, Passwd, Sock) ->
+  ?MODULE ! {close_account, Username, Passwd, self(), Sock},
   receive {?MODULE, Res} -> Res end.
 
 %com nomes registados, envio uma mensagem ao processo que está registado com o nome user_management.
 % envio a operação a realizar, o meu username, passwd e o pid para receber a resposta de verificação vinda do user_management
 % fico a espera de uma resposta que tenha o nome do module e a resposta propriamente dita que vou retornar.
-login(Username, Passwd, Pid) ->
-  ?MODULE ! {login, Username, Passwd, self(), Pid},
+login(Username, Passwd, Sock) ->
+  ?MODULE ! {login, Username, Passwd, self(), Sock},
   receive {?MODULE, Res} -> Res end.
 
-logout(Username, Passwd, Pid) ->
-  ?MODULE ! {logout, Username, Passwd, self(), Pid},
+logout(Username, Passwd, Sock) ->
+  ?MODULE ! {logout, Username, Passwd, self(), Sock},
   receive {?MODULE, Res} -> Res end.
 
 online() ->
   ?MODULE ! {online, self()},
   receive {?MODULE, Res1, Res2} -> {Res1, Res2} end.
 
-logado(Pid) ->
-  ?MODULE ! {logado, Pid, self()},
+logado(Sock) ->
+  ?MODULE ! {logado, Sock, self()},
   receive {?MODULE, Res} -> Res end.
 
 accounts() ->
   ?MODULE ! {accounts, self()},
   receive {?MODULE, Res} -> Res end.
 
+find_by_value(Value, M) ->
+  L = maps:to_list(M),
+  hd(lists:filter(fun({_Key, V1}) -> V1 == Value end, L)).
+
 loop(M, Online) ->
   receive %está bloqueada (receive) a espera de um pedido de criar conta, ou bloquear, etc. é necessário saber distinguir
-    {logado, Pid, From} ->
-      case maps:find(Pid, Online) of
-        {ok, U} ->
-          From ! {?MODULE, U},
-          loop(M, Online);
-        error ->
-          From ! {?MODULE, no},
-          loop(M, Online)
-      end;
-    {create_account, Username, Passwd, From, Pid} ->
+    {logado, Sock, From} ->
+      {U,_} = find_by_value(Sock,Online),
+      From ! {?MODULE, U},
+      loop(M, Online);
+    {create_account, Username, Passwd, From, Sock} ->
       case maps:find(Username, M) of  %find recebe key,Map e devolve ok,Value ou Error. Vê se o username já está presente
         {ok, _} ->
           From ! {?MODULE, user_exists}, %mensagem que o cliente está a espera "user_exists no Res"
@@ -58,37 +57,37 @@ loop(M, Online) ->
         error ->
           From ! {?MODULE, ok},
           M1 = maps:put(Username, {Passwd, true}, M),
-          O1 = maps:put(Pid, Username, Online),
+          O1 = maps:put(Username,Sock, Online),
           loop(M1, O1)
       end;  %map com o novo valor (M1), e bloqueia novamente no receive
-    {close_account, Username, Passwd, From, Pid} ->
+    {close_account, Username, Passwd, From, _Sock} ->
       case maps:find(Username, M) of
         {ok, {Passwd, _}} -> %caso a chave esteja no map dá ok, e só faz match se o tuplo que for retornado pelo find tiver o valor que vem na mensagem (Password)
           From ! {?MODULE, ok},
           M1 = maps:remove(Username, M),
-          O1 = maps:remove(Pid, Online),
+          O1 = maps:remove(Username, Online),
           loop(M1, O1);
         _ -> %_ ou error
           From ! {?MODULE, invalid},
           loop(M, Online)
       end;
-    {login, Username, Passwd, From, Pid} ->
+    {login, Username, Passwd, From, Sock} ->
       case maps:find(Username, M) of
-        {ok, {Passwd, _}} -> % o _ poderia ser True ou False
+        {ok, {Passwd, false}} -> % o _ poderia ser True ou False
           From ! {?MODULE, ok},
           M1 = maps:update(Username, {Passwd, true}, M),
-          O1 = maps:put(Pid, Username, Online),
+          O1 = maps:put(Username,Sock, Online),
           loop(M1, O1);
         _ ->
           From ! {?MODULE, invalid},
           loop(M, Online)
       end;
-    {logout, Username, Passwd, From, Pid} ->
+    {logout, Username, Passwd, From, _Sock} ->
       case maps:find(Username, M) of
         {ok, {Passwd, true}} ->
           From ! {?MODULE, ok},
           M1 = maps:update(Username, {Passwd, false}, M),
-          O1 = maps:remove(Pid, Online),
+          O1 = maps:remove(Username, Online),
           loop(M1, O1)
       end;
     {online, From} ->
@@ -99,4 +98,3 @@ loop(M, Online) ->
       From ! {?MODULE, M},
       loop(M, Online)
   end.
-	

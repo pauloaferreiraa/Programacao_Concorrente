@@ -80,14 +80,8 @@ void setup(){
                     public void controlEvent(CallbackEvent theEvent) {
                       String user = cp5.get(Textfield.class,"Username").getText();
                       c1.login(user,cp5.get(Textfield.class,"Password").getText());
-                      try{
-                        delay(500);
-                        estado.loginSuc(user);
-                        cp5.hide();
-                        state = game_screen;
-                      }catch(Exception e){
-                        println(e.toString());
-                      }                     
+                      cp5.hide();
+                      state = game_screen;               
                       
                     }
                   });

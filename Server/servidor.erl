@@ -4,9 +4,9 @@
 
 
 server(Port) ->
-  Room = spawn(fun() -> room(#{}) end),
+  Room = spawn(fun() -> room([]) end),
   {ok, LSock} = gen_tcp:listen(Port, [binary, {packet, line}, {reuseaddr, true}]),
-  start(),
+  spawn(fun()->start()end),
   Oper = spawn(fun() -> operation() end),
   register(?MODULE,Oper),
   acceptor(LSock, Room).
@@ -14,54 +14,53 @@ server(Port) ->
 acceptor(LSock, Room) ->
   {ok, Sock} = gen_tcp:accept(LSock),
   spawn(fun() -> acceptor(LSock, Room) end),
-  Room ! {enter, self(), Sock},
+  Room ! {enter, Sock},
   user(Sock, Room).
 
-find_by_value(Value, M) ->
-  L = maps:to_list(M),
-  hd(lists:filter(fun({_Key, V1}) -> V1 == Value end, L)).
+%find_by_value(Value, M) ->
+ % L = maps:to_list(M),
+  %hd(lists:filter(fun({_Key, V1}) -> V1 == Value end, L)).
 
 
-room(Pids) ->
+room(Socks) ->
   receive
-    {enter, Pid, Sock} ->
-      io:format("user_entered ~p~n", [Pid]),
-      room(maps:put(Pid, Sock, Pids));
-    {line, Data, Sock} ->
-      {Pi, _Soc} = find_by_value(Sock, Pids),
+    {enter, Socket} ->
+      io:format("user_entered ~p~n", [Socket]),
+      room(Socks++[Socket]);
+    {line, Data, Socket} ->
 
       StrData = binary:bin_to_list(Data),
       case StrData of
         "\\login " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
-          case login(U, P, Pi) of
+          case login(U, P, Socket) of
             ok ->
-              gen_tcp:send(Sock,<<"ok_login\n">>);           
+              gen_tcp:send(Socket,<<"ok_login\n">>);           
             invalid ->
-              gen_tcp:send(Sock,<<"invalid_login\n">>) 
-          end;
+              gen_tcp:send(Socket,<<"invalid_login\n">>) 
+          end,
+          io:format("~p~n",[online()]);
         "\\create_account " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
-          case create_account(U, P, Pi) of
+          case create_account(U, P, Socket) of
             ok -> 
-              gen_tcp:send(Sock,<<"ok_create_account\n">>); 
+              gen_tcp:send(Socket,<<"ok_create_account\n">>); 
             user_exists -> 
-              gen_tcp:send(Sock,<<"invalid_create_account\n">>)
-          end;
+              gen_tcp:send(Socket,<<"invalid_create_account\n">>)
+          end,
+          io:format("~p~n",[online()]);
         "\\logout " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
-          logout(U, P, Pi),
-          room(Pids);
+          logout(U, P, Socket);
         "\\close_account " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
-          close_account(U, P, Pi),
-          room(Pids);
+          close_account(U, P, Socket);
         "\\walk\n" -> %Caso receba mensagem para andar, mandar para si proprio uma mensagem com a instrucao walk
-          case logado(Pi) of
+          case logado(Socket) of
             no -> skip; 
             Username -> ?MODULE ! {walk,Username}            
           end;
@@ -71,10 +70,10 @@ room(Pids) ->
 
       %[Pid ! {line, Data} || Pid <- maps:keys(Pids)],
 
-      room(Pids);
-    {leave, Pid} ->
-      io:format("user_left ~p~n", [Pid]),
-      room(maps:remove(Pid, Pids))
+      room(Socks);
+    {leave, Socket} ->
+      io:format("user_left ~p~n", [Socket]),
+      room(Socks--[Socket])
   end.
 
 user(Sock, Room) ->
@@ -86,10 +85,10 @@ user(Sock, Room) ->
       Room ! {line, Data, Socket},
       %gen_tcp:send(Sock, Data),
       user(Sock, Room);
-    {tcp_closed, _} ->
-      Room ! {leave, self()};
-    {tcp_error, _, _} ->
-      Room ! {leave, self()}
+    {tcp_closed, Socket} ->
+      Room ! {leave, Socket};
+    {tcp_error, Socket, _} ->
+      Room ! {leave, Socket}
   end.
 
 
