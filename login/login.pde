@@ -1,6 +1,7 @@
 import java.util.*;
 import controlP5.*;
 import java.net.*;
+import java.util.concurrent.locks.*;
 //carregar imagens background
 PImage image_main_screen,image_login;
 
@@ -20,6 +21,8 @@ final int textfield_height = 50;
 
 Cliente c1 = null;
 Message m = null;
+Estado estado = null;
+
 
 void setup(){
     cp5 = new ControlP5(this);
@@ -41,7 +44,8 @@ void setup(){
                       //Caso o servidor nao esteja ligado, o connect vai dar exceçao e nao muda o estado
                       try{
                         c1.connect();
-                        m = new Message(c1.getPingSocket());
+                        estado = new Estado();
+                        m = new Message(c1.getPingSocket(),estado);
                         m.start();
                         state = login_screen;
                       }catch(Exception e){
@@ -74,9 +78,16 @@ void setup(){
                  .setSize(button_width,button_height).hide()
                  .onPress(new CallbackListener() { //Eventhandler do botao da pagina inicial main_screen
                     public void controlEvent(CallbackEvent theEvent) {
-                      c1.login(cp5.get(Textfield.class,"Username").getText(),cp5.get(Textfield.class,"Password").getText());
-                      cp5.hide();
-                      state = game_screen;
+                      String user = cp5.get(Textfield.class,"Username").getText();
+                      c1.login(user,cp5.get(Textfield.class,"Password").getText());
+                      try{
+                        delay(500);
+                        estado.loginSuc(user);
+                        cp5.hide();
+                        state = game_screen;
+                      }catch(Exception e){
+                        println(e.toString());
+                      }                     
                       
                     }
                   });

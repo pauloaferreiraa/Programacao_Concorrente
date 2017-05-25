@@ -3,5 +3,11 @@
  */
 public class Jogador {
     private String username;
-    private float pontuacao;
+    private double pontuacao;
+    
+    Jogador(String user,double pontuacao){
+      username = user;
+      this.pontuacao = pontuacao;
+    }
+    public String getUsername(){return username;}
 }

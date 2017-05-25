@@ -37,22 +37,18 @@ room(Pids) ->
           [U | P] = St,
           case login(U, P, Pi) of
             ok ->
-              io:format("Conta existe~n"), 
-              gen_tcp:send(Sock,<<"ok\n">>);           
+              gen_tcp:send(Sock,<<"ok_login\n">>);           
             invalid ->
-              io:format("Conta nao existe~n"),
-              gen_tcp:send(Sock,<<"invalid\n">>) 
+              gen_tcp:send(Sock,<<"invalid_login\n">>) 
           end;
         "\\create_account " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
           case create_account(U, P, Pi) of
             ok -> 
-              io:format("Conta~n"),
-              gen_tcp:send(Sock,<<"ok">>); 
+              gen_tcp:send(Sock,<<"ok_create_account\n">>); 
             user_exists -> 
-              io:format("Conta ja existe~n"),
-              gen_tcp:send(Sock,<<"invalid">>)
+              gen_tcp:send(Sock,<<"invalid_create_account\n">>)
           end;
         "\\logout " ++ Dados ->
           St = string:tokens(Dados, " "),
@@ -65,7 +61,10 @@ room(Pids) ->
           close_account(U, P, Pi),
           room(Pids);
         "\\walk\n" -> %Caso receba mensagem para andar, mandar para si proprio uma mensagem com a instrucao walk
-          ?MODULE ! {walk};
+          case logado(Pi) of
+            no -> skip; 
+            Username -> ?MODULE ! {walk,Username}            
+          end;
         _ ->
           skip
       end,
@@ -96,7 +95,7 @@ user(Sock, Room) ->
 
 operation() ->
   receive
-    {walk} ->
-      io:format("Walk"),
+    {walk,Username} ->
+      io:format("Walk from ~p",[Username]),
       operation()
   end.
