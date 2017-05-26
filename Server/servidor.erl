@@ -1,12 +1,14 @@
 -module(servidor).
 -export([server/1, acceptor/2, room/1, user/2]).
--import(loginManager, [start/0, create_account/3, login/3, online/0, close_account/3, logado/1, logout/3]).
+-import(loginManager, [start/0, create_account/3, login/3, online/0, close_account/3, logado/1, logout/3,logout_socket/1]).
+-import(estado,[]).
 
 
 server(Port) ->
   Room = spawn(fun() -> room([]) end),
   {ok, LSock} = gen_tcp:listen(Port, [binary, {packet, line}, {reuseaddr, true}]),
   spawn(fun()->start()end),
+  estado:start(),
   Oper = spawn(fun() -> operation() end),
   register(?MODULE,Oper),
   acceptor(LSock, Room).
@@ -36,21 +38,19 @@ room(Socks) ->
           [U | P] = St,
           case login(U, P, Socket) of
             ok ->
-              gen_tcp:send(Socket,<<"ok_login\n">>);           
+              gen_tcp:send(Socket,<<"ok_login\n">>);                       
             invalid ->
               gen_tcp:send(Socket,<<"invalid_login\n">>) 
-          end,
-          io:format("~p~n",[online()]);
+          end;
         "\\create_account " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
           case create_account(U, P, Socket) of
-            ok -> 
+            ok ->
               gen_tcp:send(Socket,<<"ok_create_account\n">>); 
             user_exists -> 
               gen_tcp:send(Socket,<<"invalid_create_account\n">>)
-          end,
-          io:format("~p~n",[online()]);
+          end;
         "\\logout " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
@@ -60,10 +60,8 @@ room(Socks) ->
           [U | P] = St,
           close_account(U, P, Socket);
         "\\walk\n" -> %Caso receba mensagem para andar, mandar para si proprio uma mensagem com a instrucao walk
-          case logado(Socket) of
-            no -> skip; 
-            Username -> ?MODULE ! {walk,Username}            
-          end;
+          Username = logado(Socket),
+          ?MODULE ! {walk,Username};            
         _ ->
           skip
       end,
@@ -73,6 +71,7 @@ room(Socks) ->
       room(Socks);
     {leave, Socket} ->
       io:format("user_left ~p~n", [Socket]),
+      logout_socket(Socket),%fazer logout quando o utilizador deixar o servidor
       room(Socks--[Socket])
   end.
 
@@ -95,6 +94,6 @@ user(Sock, Room) ->
 operation() ->
   receive
     {walk,Username} ->
-      io:format("Walk from ~p",[Username]),
+      estado ! {walk,Username},
       operation()
   end.

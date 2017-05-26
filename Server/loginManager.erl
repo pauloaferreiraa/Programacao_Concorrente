@@ -1,5 +1,5 @@
 -module(loginManager).
--export([start/0, create_account/3, login/3, logout/3, online/0, close_account/3, accounts/0, logado/1]).
+-export([start/0, create_account/3, login/3, logout/3, online/0, close_account/3, accounts/0, logado/1,logout_socket/1]).
 %start com 0 parametros, create_account com 2 parametros
 
 start() ->
@@ -23,6 +23,10 @@ login(Username, Passwd, Sock) ->
   ?MODULE ! {login, Username, Passwd, self(), Sock},
   receive {?MODULE, Res} -> Res end.
 
+logout_socket(Sock) ->
+  ?MODULE ! {logout_socket, self(), Sock},
+  receive {?MODULE, Res} -> Res end.
+
 logout(Username, Passwd, Sock) ->
   ?MODULE ! {logout, Username, Passwd, self(), Sock},
   receive {?MODULE, Res} -> Res end.
@@ -41,14 +45,30 @@ accounts() ->
 
 find_by_value(Value, M) ->
   L = maps:to_list(M),
-  hd(lists:filter(fun({_Key, V1}) -> V1 == Value end, L)).
+  Result = lists:filter(fun({_Key, V1}) -> V1 == Value end, L),
+  case Result of
+    [] -> error;
+    _ -> hd(Result)
+  end.
 
 loop(M, Online) ->
   receive %está bloqueada (receive) a espera de um pedido de criar conta, ou bloquear, etc. é necessário saber distinguir
     {logado, Sock, From} ->
-      {U,_} = find_by_value(Sock,Online),
-      From ! {?MODULE, U},
+      case find_by_value(Sock,Online) of
+        {U,_} -> From ! {?MODULE, U};
+        error -> skip
+      end,
       loop(M, Online);
+    {logout_socket,From,Sock}-> %vai receber o socket que se desconectou do servidor e vai fazer logout no username associado
+      From ! {?MODULE,ok},
+      case find_by_value(Sock,Online) of
+        {U,_} ->
+          {Passwd,_} = maps:get(U,M),
+          M1 = maps:update(U,{Passwd,false},M),
+          O1 = maps:remove(U,Online),
+          loop(M1,O1);
+        error -> loop(M,Online)
+      end;
     {create_account, Username, Passwd, From, Sock} ->
       case maps:find(Username, M) of  %find recebe key,Map e devolve ok,Value ou Error. Vê se o username já está presente
         {ok, _} ->
@@ -56,8 +76,9 @@ loop(M, Online) ->
           loop(M, Online);
         error ->
           From ! {?MODULE, ok},
-          M1 = maps:put(Username, {Passwd, true}, M),
+          M1 = maps:put(Username, {Passwd, true}, M),          
           O1 = maps:put(Username,Sock, Online),
+          io:format("~p",[O1]),
           loop(M1, O1)
       end;  %map com o novo valor (M1), e bloqueia novamente no receive
     {close_account, Username, Passwd, From, _Sock} ->
@@ -75,7 +96,7 @@ loop(M, Online) ->
       case maps:find(Username, M) of
         {ok, {Passwd, false}} -> % o _ poderia ser True ou False
           From ! {?MODULE, ok},
-          M1 = maps:update(Username, {Passwd, true}, M),
+          M1 = maps:update(Username, {Passwd, true}, M),          
           O1 = maps:put(Username,Sock, Online),
           loop(M1, O1);
         _ ->

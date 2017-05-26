@@ -21,8 +21,11 @@ estado(Espera, Online, Planetas) ->
       Esp = maps:remove(Username, Espera),
       estado(Esp, On, Planetas);
     {online, add, Username} ->
-      On = maps:put(Username, geraAvatorJogador(), Online)
-
+      On = maps:put(Username, geraAvatarJogador(), Online),
+      estado(Espera,On,Planetas);
+    {walk, Username}->
+      io:format("Hello ~p",[Username]),
+      estado(Espera,Online,Planetas)
   end.
 
     
