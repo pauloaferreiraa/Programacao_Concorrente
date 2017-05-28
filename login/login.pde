@@ -23,7 +23,7 @@ final int textfield_height = 50;
 Cliente c1 = null;
 Message m = null;
 Estado estado = null;
-
+BufferedReader in = null;
 
 void setup(){
     cp5 = new ControlP5(this);
@@ -45,6 +45,7 @@ void setup(){
                       //Caso o servidor nao esteja ligado, o connect vai dar exceçao e nao muda o estado
                       try{
                         c1.connect();
+                        in = new BufferedReader(new InputStreamReader(c1.getPingSocket().getInputStream()));
                         estado = new Estado();
                         state = login_screen;
                       }catch(Exception e){
@@ -81,11 +82,10 @@ void setup(){
                       c1.login(user,cp5.get(Textfield.class,"Password").getText());
                       
                       try{
-                        BufferedReader in = new BufferedReader(new InputStreamReader(c1.getPingSocket().getInputStream()));
                         String s = in.readLine();
                         println(s);
                         if(s.equals("ok_login")){
-                          m = new Message(c1.getPingSocket(),estado);
+                          m = new Message(in,estado);
                           m.start();
                           cp5.hide();
                           state = game_screen;
@@ -103,11 +103,10 @@ void setup(){
                     public void controlEvent(CallbackEvent theEvent) {
                       c1.create_account(cp5.get(Textfield.class,"Username").getText(),cp5.get(Textfield.class,"Password").getText());
                       try{
-                        BufferedReader in = new BufferedReader(new InputStreamReader(c1.getPingSocket().getInputStream()));
                         String s = in.readLine();
                         println(s);
                         if(s.equals("ok_create_account")){
-                          m = new Message(c1.getPingSocket(),estado);
+                          m = new Message(in,estado);
                           m.start();
                           cp5.hide();
                           state = game_screen;
@@ -155,6 +154,9 @@ void draw() {
     case login_screen:
       show_login();
       break;
+    case game_screen:
+      show_game_screen();
+      break;
   } 
 }
 
@@ -192,7 +194,12 @@ void show_login(){
 }
 
 void show_game_screen(){
-  
+  background(0);
+  double[][] elem = estado.atributosJogador();
+  for(int i = 0;i<elem.length;i++){
+    //System.out.println(elem[i][0] + " " + elem[i][1] + " " + elem[i][2] + " " + elem[i][3]);
+    ellipse((float)elem[i][0],(float)elem[i][1],(float)elem[i][2],(float)elem[i][3]);
+  }
 }
 
 void keyPressed(){

@@ -10,4 +10,8 @@ public class Jogador {
       this.pontuacao = pontuacao;
     }
     public String getUsername(){return username;}
+    
+    public String toString(){
+      return "Jogador: " + username + " Pontuacao: " + pontuacao +"\n";
+    }
 }

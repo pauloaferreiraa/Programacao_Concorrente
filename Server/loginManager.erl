@@ -10,7 +10,7 @@ start() ->
 
 create_account(Username, Passwd, Sock) ->
   ?MODULE ! {create_account, Username, Passwd, self(), Sock},
-  receive {?MODULE, Res} -> Res end.
+  receive {?MODULE, Res, N} -> {Res,N} end. %O N é o numero de clientes que estao logados
 
 close_account(Username, Passwd, Sock) ->
   ?MODULE ! {close_account, Username, Passwd, self(), Sock},
@@ -21,7 +21,7 @@ close_account(Username, Passwd, Sock) ->
 % fico a espera de uma resposta que tenha o nome do module e a resposta propriamente dita que vou retornar.
 login(Username, Passwd, Sock) ->
   ?MODULE ! {login, Username, Passwd, self(), Sock},
-  receive {?MODULE, Res} -> Res end.
+  receive {?MODULE, Res, N} -> {Res,N} end. %O N é o numero de clientes que estao logados
 
 logout_socket(Sock) ->
   ?MODULE ! {logout_socket, self(), Sock},
@@ -72,13 +72,12 @@ loop(M, Online) ->
     {create_account, Username, Passwd, From, Sock} ->
       case maps:find(Username, M) of  %find recebe key,Map e devolve ok,Value ou Error. Vê se o username já está presente
         {ok, _} ->
-          From ! {?MODULE, user_exists}, %mensagem que o cliente está a espera "user_exists no Res"
+          From ! {?MODULE, user_exists,0}, %mensagem que o cliente está a espera "user_exists no Res"
           loop(M, Online);
         error ->
-          From ! {?MODULE, ok},
+          From ! {?MODULE, ok, maps:size(M)+1},
           M1 = maps:put(Username, {Passwd, true}, M),          
           O1 = maps:put(Username,Sock, Online),
-          io:format("~p",[O1]),
           loop(M1, O1)
       end;  %map com o novo valor (M1), e bloqueia novamente no receive
     {close_account, Username, Passwd, From, _Sock} ->
@@ -95,12 +94,12 @@ loop(M, Online) ->
     {login, Username, Passwd, From, Sock} ->
       case maps:find(Username, M) of
         {ok, {Passwd, false}} -> % o _ poderia ser True ou False
-          From ! {?MODULE, ok},
+          From ! {?MODULE, ok, maps:size(M)+1},
           M1 = maps:update(Username, {Passwd, true}, M),          
           O1 = maps:put(Username,Sock, Online),
           loop(M1, O1);
         _ ->
-          From ! {?MODULE, invalid},
+          From ! {?MODULE, invalid,0},
           loop(M, Online)
       end;
     {logout, Username, Passwd, From, _Sock} ->

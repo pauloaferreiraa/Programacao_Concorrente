@@ -37,18 +37,26 @@ room(Socks) ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
           case login(U, P, Socket) of
-            ok ->
-              gen_tcp:send(Socket,<<"ok_login\n">>);                       
-            invalid ->
+            {ok,N} -> %recebe o numero de clientes logados
+              gen_tcp:send(Socket,<<"ok_login\n">>),
+              if
+                N =< 4 -> ?MODULE ! {online,add,U,Socks};
+                true -> skip
+              end;                                     
+            {invalid,_} ->
               gen_tcp:send(Socket,<<"invalid_login\n">>) 
           end;
         "\\create_account " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
           case create_account(U, P, Socket) of
-            ok ->
-              gen_tcp:send(Socket,<<"ok_create_account\n">>); 
-            user_exists -> 
+            {ok,N} -> %recebe o numero de clientes logados
+              gen_tcp:send(Socket,<<"ok_create_account\n">>),
+              if
+                N =< 4 -> ?MODULE ! {online,add,U,Socks};
+                true -> skip
+              end;   
+            {user_exists,_} -> 
               gen_tcp:send(Socket,<<"invalid_create_account\n">>)
           end;
         "\\logout " ++ Dados ->
@@ -95,5 +103,8 @@ operation() ->
   receive
     {walk,Username} ->
       estado ! {walk,Username},
+      operation();
+    {online,add,U,Socket} ->
+      estado ! {online,add,U,Socket},
       operation()
   end.
