@@ -25,12 +25,12 @@ estado(Espera, Online, Planetas, Mensagens) ->
       Esp = maps:put(Username, geraAvatarJogador(), Espera),
       estado(Esp, Online, Planetas,Mensagens);
     {walk,Username,Socks} ->
-	    {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Online),
-	    On = maps:update(Username,{Massa,Velo,Dir,X,Y+3,H,W},Online),
-	    Dados = "online_upd " ++ Username ++ " " ++ integer_to_list(X) ++ " " ++ integer_to_list(Y+3) ++ "\n",
-	    M = Mensagens ++ [Dados],
-	    [gen_tcp:send(Socket,list_to_binary(Msg)) || Socket <-Socks,Msg <-M], 
-      estado(Espera,On,Planetas,M)
+      {Massa, Velo, Dir, X, Y, H, W} = maps:get(Username,Online),
+      O1 = maps:update(Username,{Massa, Velo, Dir, X + 10, Y, H, W},Online),
+      Dados = "online_upd " ++ Username ++ " " ++ integer_to_list(X+10) ++ " " ++ integer_to_list(Y) ++ "\n",
+      M = Mensagens ++ [Dados],
+      [gen_tcp:send(Socket,list_to_binary(Msg)) || Socket <- Socks, Msg <- M], %enviar os dados do jogador
+      estado(Espera,O1,Planetas,M)
   end.
 
     
