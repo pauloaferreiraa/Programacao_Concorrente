@@ -40,7 +40,9 @@ room(Socks) ->
             {ok,N} -> %recebe o numero de clientes logados
               gen_tcp:send(Socket,<<"ok_login\n">>),
               if
-                N =< 4 -> ?MODULE ! {online,add,U,Socks};
+                N =< 4 -> 
+                  ?MODULE ! {Socket},
+                  ?MODULE ! {online,add,U,Socks};
                 true -> skip
               end;                                     
             {invalid,_} ->
@@ -53,7 +55,9 @@ room(Socks) ->
             {ok,N} -> %recebe o numero de clientes logados
               gen_tcp:send(Socket,<<"ok_create_account\n">>),
               if
-                N =< 4 -> ?MODULE ! {online,add,U,Socks};
+                N =< 4 -> 
+                  ?MODULE ! {Socket},
+                  ?MODULE ! {online,add,U,Socks};
                 true -> skip
               end;   
             {user_exists,_} -> 
@@ -78,6 +82,12 @@ room(Socks) ->
 
       room(Socks);
     {leave, Socket} ->
+      %case logado(Socket) of
+      %  no -> skip;
+      %  Username -> 
+       %   ?MODULE ! {logout,Username,Socks}      
+      %end,
+      
       io:format("user_left ~p~n", [Socket]),
       logout_socket(Socket),%fazer logout quando o utilizador deixar o servidor
       room(Socks--[Socket])
@@ -106,5 +116,11 @@ operation() ->
       operation();
     {online,add,U,Socks} ->
       estado ! {online,add,U,Socks},
+      operation();
+    {Socket} ->       % <--------------
+	    estado ! {Socket},
+	    operation();
+    {logout,Username,Socks} ->
+      estado ! {logout,Username,Socks},
       operation()
   end.

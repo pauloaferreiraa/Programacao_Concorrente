@@ -216,6 +216,7 @@ public void show_login(){
 }
 
 public void show_game_screen(){
+  //frameRate(5);
   background(0);
   double[][] elem = estado.atributosJogador();
   for(int i = 0;i<elem.length;i++){

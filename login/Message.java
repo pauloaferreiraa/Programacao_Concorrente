@@ -31,6 +31,11 @@ public class Message extends Thread{
               if(sp[0].equals("online_upd")){
                 estado.updatePosicao(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]));
               }
+              
+              if(sp[0].equals("logout")){
+                System.out.println("Recebeu");
+                estado.logout(sp[1]);
+              }
             }
             
             

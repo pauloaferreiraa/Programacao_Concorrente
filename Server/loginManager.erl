@@ -56,7 +56,7 @@ loop(M, Online) ->
     {logado, Sock, From} ->
       case find_by_value(Sock,Online) of
         {U,_} -> From ! {?MODULE, U};
-        error -> skip
+        error -> From ! {?MODULE,no}
       end,
       loop(M, Online);
     {logout_socket,From,Sock}-> %vai receber o socket que se desconectou do servidor e vai fazer logout no username associado
