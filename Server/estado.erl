@@ -31,7 +31,7 @@ estado(Espera, Online, Planetas, Mensagens) ->
       Dados = "online " ++ Username ++ " 0.0 " ++ integer_to_list(Massa) ++ " " ++ integer_to_list(Velo) ++ " " ++ integer_to_list(Dir) 
                 ++ " " ++ integer_to_list(X) ++ " " ++ integer_to_list(Y) ++ " " ++ integer_to_list(H) ++ " " ++ integer_to_list(W) ++ "\n",
       M = Mensagens ++ [Dados],
-      [gen_tcp:send(Socket,list_to_binary(Msg)) || Socket <- Socks, Msg <- M], %enviar os dados do jogador
+      [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <- Socks], %enviar os dados do jogador
       On = maps:put(Username, {Massa, Velo, Dir, X, Y, H, W}, Online),
       estado(Espera,On,Planetas,M);
     {espera, add, Username,Socket} ->
