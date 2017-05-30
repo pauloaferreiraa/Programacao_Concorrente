@@ -75,7 +75,7 @@ loop(M, Online) ->
           From ! {?MODULE, user_exists,0}, %mensagem que o cliente está a espera "user_exists no Res"
           loop(M, Online);
         error ->
-          From ! {?MODULE, ok, maps:size(M)+1},
+          From ! {?MODULE, ok, maps:size(Online)+1},
           M1 = maps:put(Username, {Passwd, true}, M),          
           O1 = maps:put(Username,Sock, Online),
           loop(M1, O1)
@@ -94,7 +94,7 @@ loop(M, Online) ->
     {login, Username, Passwd, From, Sock} ->
       case maps:find(Username, M) of
         {ok, {Passwd, false}} -> % o _ poderia ser True ou False
-          From ! {?MODULE, ok, maps:size(M)+1},
+          From ! {?MODULE, ok, maps:size(Online)+1},
           M1 = maps:update(Username, {Passwd, true}, M),          
           O1 = maps:put(Username,Sock, Online),
           loop(M1, O1);

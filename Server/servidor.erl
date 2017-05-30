@@ -43,7 +43,9 @@ room(Socks) ->
                 N =< 4 -> 
                   ?MODULE ! {Socket},
                   ?MODULE ! {online,add,U,Socks};
-                true -> skip
+                true -> 
+                  ?MODULE ! {Socket},
+                  ?MODULE ! {espera,add,U}
               end;                                     
             {invalid,_} ->
               gen_tcp:send(Socket,<<"invalid_login\n">>) 
@@ -58,7 +60,9 @@ room(Socks) ->
                 N =< 4 -> 
                   ?MODULE ! {Socket},
                   ?MODULE ! {online,add,U,Socks};
-                true -> skip
+                true -> 
+                  ?MODULE ! {Socket},
+                  ?MODULE ! {espera,add,U}
               end;   
             {user_exists,_} -> 
               gen_tcp:send(Socket,<<"invalid_create_account\n">>)
@@ -82,11 +86,11 @@ room(Socks) ->
 
       room(Socks);
     {leave, Socket} ->
-      %case logado(Socket) of
-      %  no -> skip;
-      %  Username -> 
-       %   ?MODULE ! {logout,Username,Socks}      
-      %end,
+      case logado(Socket) of
+        no -> skip;
+        Username -> 
+        ?MODULE ! {logout,Username,Socks}      
+      end,
       
       io:format("user_left ~p~n", [Socket]),
       logout_socket(Socket),%fazer logout quando o utilizador deixar o servidor
@@ -113,6 +117,9 @@ operation() ->
   receive
     {walk,Username,Socks} ->
       estado ! {walk,Username,Socks},
+      operation();
+    {espera,add,Username} ->
+      estado ! {espera,add,Username},
       operation();
     {online,add,U,Socks} ->
       estado ! {online,add,U,Socks},
