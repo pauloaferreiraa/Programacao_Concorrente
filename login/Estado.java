@@ -27,6 +27,23 @@ public class Estado{
       }
     }
     
+    public String[] getNome(){
+      l.lock();  
+      String[] nomes = new String[4];
+      int i=0; 
+        try{
+         for(Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
+             nomes[i] = entry.getKey().getUsername();
+             i++;
+         }
+        }finally{
+          l.unlock();
+          return nomes;
+        }
+        
+    }
+    
+    
     public double[][] atributosJogador(){
       l.lock();
       
@@ -34,9 +51,10 @@ public class Estado{
       int i = 0;
       try{
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
+          double[] atr = entry.getValue().getAtributos();
           //System.out.println(entry.getKey().toString() + entry.getValue().toString());
-          elementos[i][0] = entry.getValue().getAtributos()[0]; elementos[i][1] = entry.getValue().getAtributos()[1];
-          elementos[i][2] = entry.getValue().getAtributos()[2]; elementos[i][3] = entry.getValue().getAtributos()[3];
+          elementos[i][0] = atr[0]; elementos[i][1] = atr[1];
+          elementos[i][2] = atr[2]; elementos[i][3] = atr[3];
           i++;
         }
       }finally{

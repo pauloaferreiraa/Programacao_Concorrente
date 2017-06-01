@@ -218,11 +218,18 @@ public void show_login(){
 public void show_game_screen(){
   //frameRate(5);
   background(0);
+  String[] nomes = estado.getNome();
   double[][] elem = estado.atributosJogador();
+  int space=0;
   for(int i = 0;i<elem.length;i++){
     //System.out.println(elem[i][0] + " " + elem[i][1] + " " + elem[i][2] + " " + elem[i][3]);
     ellipse((float)elem[i][0],(float)elem[i][1],(float)elem[i][2],(float)elem[i][3]);
+    if(!(nomes[i] == null)){
+     text(nomes[i],width-textWidth(nomes[i]),30+space);
+     space+=20;
+      } 
   }
+  
 }
 
 public void keyPressed(){
