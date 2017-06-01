@@ -11,6 +11,7 @@ server(Port) ->
   estado:start(),
   Oper = spawn(fun() -> operation() end),
   register(?MODULE,Oper),
+  ?MODULE ! {gera_planetas},
   acceptor(LSock, Room).
 
 acceptor(LSock, Room) ->
@@ -121,6 +122,9 @@ user(Sock, Room) ->
 
 operation() ->
   receive
+    {gera_planetas} ->
+      estado ! {gera_planetas},
+      operation();
     {walk,Username,Socks} ->
       estado ! {walk,Username,Socks},
       operation();

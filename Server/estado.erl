@@ -5,25 +5,43 @@ start() ->
   Pid = spawn(fun() -> estado(#{}, #{}, queue:new()) end),
   register(?MODULE, Pid).
 
-geraAvatarJogador() -> %{massa,velocidade,direcao,x,y}
+geraAvatarJogador() -> %{massa,velocidade,direcao,x,y,largura,altura}
   {1, 20, 120, rand:uniform(500), 50, 50, 50}.
 
-%funcao que recebe socket do user que acabou de fazer login e map dos Online
-login_estado(Online,Socket) ->
+
+geraAvatarPlaneta() -> %{massa,velocidade,x,y}
+  Massa = 100 + rand:uniform(50),
+  Velocidade = 5 + rand:uniform(20),
+  {Massa,Velocidade,rand:uniform(800),rand:uniform(600)}.
+
+
+%funcao que recebe socket do user que acabou de fazer login e map dos Online e envia mensagem
+login_estado(Online,Planetas,Socket) ->
   case maps:to_list(Online) of
     [] -> skip;
     L ->
   [gen_tcp:send(Socket,list_to_binary("online " ++ U ++ " 0.0 " ++ integer_to_list(Massa) ++ " " ++ integer_to_list(Velo) ++ " " ++ integer_to_list(Dir) 
                 ++ " " ++ integer_to_list(X) ++ " " ++ integer_to_list(Y) ++ " " ++ integer_to_list(H) ++ " " ++ integer_to_list(W) ++ "\n"))
-                 || {U,{Massa, Velo, Dir, X, Y, H, W}} <- L]
-    
+                 || {U,{Massa, Velo, Dir, X, Y, H, W}} <- L]    
+  end,
+  case maps:to_list(Planetas) of
+    [] -> skip;
+    Pla ->
+      [gen_tcp:send(Socket,list_to_binary("planeta " ++ integer_to_list(N) ++ " " ++ integer_to_list(Massa) ++ " " ++ integer_to_list(Velo) ++ " " ++ integer_to_list(X) 
+                ++ " " ++ integer_to_list(Y) ++ "\n"))
+                 || {N,{Massa, Velo, X, Y}} <- Pla]
   end.
 
 %Online é um map com Username chave e o seu avatar como chave #{Username => {massa,velocidade,direcao,x,y,height,width}}
 estado(Online, Planetas, EsperaQ) ->
   receive
+    {gera_planetas} ->
+      P = maps:put(maps:size(Planetas),geraAvatarPlaneta(),Planetas),
+      P1 = maps:put(maps:size(P),geraAvatarPlaneta(),P),
+      P2 = maps:put(maps:size(P1),geraAvatarPlaneta(),P1),
+      estado(Online,P2,EsperaQ);
     {Socket} ->      %<--------
-		  login_estado(Online,Socket),
+		  login_estado(Online,Planetas,Socket),
 		  estado(Online,Planetas,EsperaQ);
     {online, add, Username,Socks} ->
       {Massa, Velo, Dir, X, Y, H, W} = geraAvatarJogador(),
