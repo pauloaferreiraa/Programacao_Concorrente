@@ -6,7 +6,7 @@ start() ->
   register(?MODULE, Pid).
 
 geraAvatarJogador() -> %{massa,velocidade,direcao,x,y}
-  {5, 20, 120, rand:uniform(500), 50, 50, 50}.
+  {1, 20, 120, rand:uniform(500), 50, 50, 50}.
 
 %funcao que recebe socket do user que acabou de fazer login e map dos Online
 login_estado(Online,Socket) ->

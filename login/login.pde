@@ -20,6 +20,8 @@ final int button_height = 50;
 final int textfield_width = 150;
 final int textfield_height = 50;
 
+boolean connect_fail = false;
+boolean login_fail = false, create_account_fail = false;
 float x, y;
 Cliente c1 = null;
 Message m = null;
@@ -50,7 +52,9 @@ void setup(){
                         estado = new Estado();
                         state = login_screen;
                       }catch(Exception e){
+                        connect_fail = true;
                         state = main_screen;
+                        
                       }
                       cp5.getController("Connect").hide();
                     }
@@ -90,6 +94,8 @@ void setup(){
                           m.start();
                           cp5.hide();
                           state = game_screen;
+                        }else{
+                          login_fail=true;
                         }
                       }catch(Exception e){e.printStackTrace();}
                       
@@ -111,6 +117,8 @@ void setup(){
                           m.start();
                           cp5.hide();
                           state = game_screen;
+                        }else{
+                          create_account_fail = true;
                         }
                       }catch(Exception e){e.printStackTrace();}
                     }
@@ -175,7 +183,9 @@ void show_main_screen(){
     cp5.getController("Password").hide();
     cp5.getController("Disconnect").hide();
    
+    
     image(image_main_screen,0,0,width,height);
+    if(connect_fail) text("Falha na Conexão",100,100);
 }
 
 void show_login(){
@@ -192,6 +202,9 @@ void show_login(){
   cp5.getController("Username").show();
   cp5.getController("Password").show();
   cp5.getController("Disconnect").show();
+  
+  if(create_account_fail) text("Conta já existe",100,100);
+  if(login_fail) text("Conta não existe",100,100);
 }
 
 void show_game_screen(){
