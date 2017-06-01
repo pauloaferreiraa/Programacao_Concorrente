@@ -214,10 +214,13 @@ void show_game_screen(){
   double[][] elem = estado.atributosJogador();
   float[][] planetas = estado.getPlanetas();
   int space=0;
-  for(int i = 0;i<elem.length;i++){
-    x = (float)elem[i][0];y = (float)elem[i][1];
+  for(int i = 0;i<planetas.length;i++){
     px = planetas[i][1]; py = planetas[i][2]; h = planetas[i][0]; w = planetas[i][0];
     ellipse(px,py,h,w);
+  }
+  for(int i = 0;i<elem.length;i++){
+    x = (float)elem[i][0];y = (float)elem[i][1];
+    
     pushMatrix();
     translate(x,y);
     rotate(radians((float)elem[i][4]));

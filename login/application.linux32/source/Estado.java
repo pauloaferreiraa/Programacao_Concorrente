@@ -8,13 +8,13 @@ import java.util.concurrent.locks.*;
 public class Estado{
     private Map<Jogador, AvatarJogador> online;
     private Map<Jogador, AvatarJogador> espera;
-    private List<AvatarPlaneta> planetas;
+    private Map<Integer,AvatarPlaneta> planetas;
     private Lock l = new ReentrantLock();
     
     Estado(){
       online = new HashMap();
       espera = new HashMap();
-      planetas = new ArrayList();
+      planetas = new HashMap();
     }
     
     
@@ -25,6 +25,16 @@ public class Estado{
       }finally{
         l.unlock();
       }
+    }
+    
+    public void addPlaneta(int N,AvatarPlaneta ap){
+      l.lock();
+      try{
+        planetas.put(N,ap);  
+      }finally{
+        l.unlock();
+      }
+    
     }
     
     public String[] getNome(){
@@ -41,6 +51,21 @@ public class Estado{
           return nomes;
         }
         
+    }
+    
+    public float[][] getPlanetas(){
+      l.lock();
+      float[][] plan = new float[3][3];
+      int i = 0;
+      try{
+        for(Map.Entry<Integer,AvatarPlaneta> entry : planetas.entrySet()){
+             plan[i] = entry.getValue().getAtributos();
+             i++;
+         }
+      }finally{
+        l.unlock();
+        return plan;
+      }
     }
     
     

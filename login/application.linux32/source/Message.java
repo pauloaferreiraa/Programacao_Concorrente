@@ -42,8 +42,12 @@ public class Message extends Thread{
               
               
               if(sp[0].equals("logout")){
-                System.out.println("Recebeu");
                 estado.logout(sp[1]);
+              }
+              
+              if(sp[0].equals("planeta")){
+                estado.addPlaneta(Integer.parseInt(sp[1]),
+                new AvatarPlaneta(Float.parseFloat(sp[2]),Float.parseFloat(sp[3]),Float.parseFloat(sp[4]),Float.parseFloat(sp[5])));
               }
             }
             
