@@ -20,6 +20,7 @@ final int button_height = 50;
 final int textfield_width = 150;
 final int textfield_height = 50;
 
+float x, y;
 Cliente c1 = null;
 Message m = null;
 Estado estado = null;
@@ -195,17 +196,23 @@ void show_login(){
 
 void show_game_screen(){
   //frameRate(5);
-  background(0);
+  background(255);
   String[] nomes = estado.getNome();
   double[][] elem = estado.atributosJogador();
   int space=0;
   for(int i = 0;i<elem.length;i++){
-    //System.out.println(elem[i][0] + " " + elem[i][1] + " " + elem[i][2] + " " + elem[i][3]);
-    ellipse((float)elem[i][0],(float)elem[i][1],(float)elem[i][2],(float)elem[i][3]);
+    x = (float)elem[i][0];y = (float)elem[i][1];
+    pushMatrix();
+    translate(x,y);
+    rotate(radians((float)elem[i][4]));
+    line(0,0,35,0);
+    ellipse(0,0,(float)elem[i][2],(float)elem[i][3]);
+    popMatrix();
+    fill(255,0,0);
     if(!(nomes[i] == null)){
-     text(nomes[i],width-textWidth(nomes[i]),30+space);
-     space+=20;
-      } 
+      text(nomes[i],width-textWidth(nomes[i]),30+space);
+      space+=20;
+    } 
   }
   
 }
@@ -214,6 +221,12 @@ void keyPressed(){
   if(state == game_screen){
     if(keyCode == UP){
       c1.sendMessage("\\walk");
+    }
+    if(keyCode == LEFT){
+      c1.sendMessage("\\left");
+    }
+    if(keyCode == RIGHT){
+      c1.sendMessage("\\right");
     }
   }
 }

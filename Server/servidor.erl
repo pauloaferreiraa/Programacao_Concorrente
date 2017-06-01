@@ -77,7 +77,13 @@ room(Socks) ->
           close_account(U, P, Socket);
         "\\walk\n" -> %Caso receba mensagem para andar, mandar para si proprio uma mensagem com a instrucao walk
           Username = logado(Socket),
-          ?MODULE ! {walk,Username,Socks};            
+          ?MODULE ! {walk,Username,Socks};
+        "\\left\n" ->
+          Username = logado(Socket),
+          ?MODULE ! {left,Username,Socks};
+        "\\right\n" ->
+          Username = logado(Socket),
+          ?MODULE ! {right,Username,Socks};            
         _ ->
           skip
       end,
@@ -117,6 +123,12 @@ operation() ->
   receive
     {walk,Username,Socks} ->
       estado ! {walk,Username,Socks},
+      operation();
+    {left,Username,Socks} -> %Muda a direçao do jogador
+      estado ! {left,Username,Socks},
+      operation();
+    {right,Username,Socks} ->%Muda a direçao do jogador
+      estado ! {right,Username,Socks},
       operation();
     {espera,add,Username} ->
       estado ! {espera,add,Username},

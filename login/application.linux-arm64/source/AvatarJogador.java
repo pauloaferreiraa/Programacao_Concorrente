@@ -16,12 +16,16 @@ public class AvatarJogador {
     public void updatePos(double x, double y){
       this.x = x;this.y = y;
     }
+    
+    public void updateDir(double dir){
+      this.direcao = dir;
+    }
     public String toString(){
       return "Massa: " + massa + " Veloc: " + velocidade + " Dir: " + direcao + " x: " + x + " y: " + y + " h: " + h + " w: " + w + "\n";
     }
     
     public double[] getAtributos(){
-      double[] feat = {x,y,h,w};
+      double[] feat = {x,y,h,w,direcao};
       
       return feat;
     }

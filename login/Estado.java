@@ -47,7 +47,7 @@ public class Estado{
     public double[][] atributosJogador(){
       l.lock();
       
-      double[][] elementos = new double[4][4];
+      double[][] elementos = new double[4][5];
       int i = 0;
       try{
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
@@ -55,6 +55,7 @@ public class Estado{
           //System.out.println(entry.getKey().toString() + entry.getValue().toString());
           elementos[i][0] = atr[0]; elementos[i][1] = atr[1];
           elementos[i][2] = atr[2]; elementos[i][3] = atr[3];
+          elementos[i][4] = atr[4];
           i++;
         }
       }finally{
@@ -70,6 +71,19 @@ public class Estado{
         Jogador j = null;
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
           if(entry.getKey().getUsername().equals(username)) entry.getValue().updatePos(x,y);
+        }
+      }finally{
+        l.unlock();
+      }
+    }
+    
+    public void updateDirecao(String username,double dir){
+      l.lock();
+      
+      try{
+        Jogador j = null;
+        for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
+          if(entry.getKey().getUsername().equals(username)) entry.getValue().updateDir(dir);
         }
       }finally{
         l.unlock();

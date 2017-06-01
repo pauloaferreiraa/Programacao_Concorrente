@@ -28,9 +28,18 @@ public class Message extends Thread{
                                                                                         Double.parseDouble(sp[7]),Double.parseDouble(sp[8]),
                                                                                         Double.parseDouble(sp[9])));
               }
-              if(sp[0].equals("online_upd")){
+              if(sp[0].equals("online_upd_pos")){
                 estado.updatePosicao(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]));
               }
+              
+              if(sp[0].equals("online_upd_left")){
+                estado.updateDirecao(sp[1],Double.parseDouble(sp[2]));
+              }
+              
+              if(sp[0].equals("online_upd_right")){
+                estado.updateDirecao(sp[1],Double.parseDouble(sp[2]));
+              }
+              
               
               if(sp[0].equals("logout")){
                 System.out.println("Recebeu");

@@ -44,8 +44,36 @@ estado(Online, Planetas, EsperaQ) ->
           maps:get(Username,Online),
           io:format("~p~n",[Username]),
 	        {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Online),
-	        On = maps:update(Username,{Massa,Velo,Dir,X,Y+Velo,H,W},Online),
-	        Dados = "online_upd " ++ Username ++ " " ++ integer_to_list(X) ++ " " ++ integer_to_list(Y+Velo) ++ "\n",
+          NewX = X + (math:cos(Dir*math:pi()/180)*Velo),%converter graus em radianos
+          NewY = Y + (math:sin(Dir*math:pi()/180)*Velo),
+	        On = maps:update(Username,{Massa,Velo,Dir,NewX,NewY,H,W},Online),
+	        Dados = "online_upd_pos " ++ Username ++ " " ++ float_to_list(NewX) ++ " " ++ float_to_list(NewY) ++ "\n",
+	        [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks], 
+          estado(On,Planetas,EsperaQ)
+      end;
+    {left,Username,Socks} ->
+      case maps:is_key(Username,Online) of
+        false ->
+          estado(Online,Planetas,EsperaQ);
+        true ->
+          maps:get(Username,Online),
+          io:format("~p~n",[Username]),
+	        {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Online),
+	        On = maps:update(Username,{Massa,Velo,Dir-10,X,Y,H,W},Online),
+	        Dados = "online_upd_left " ++ Username ++ " " ++ integer_to_list(Dir-10) ++ "\n",
+	        [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks], 
+          estado(On,Planetas,EsperaQ)
+      end;
+    {right,Username,Socks} ->
+      case maps:is_key(Username,Online) of
+        false ->
+          estado(Online,Planetas,EsperaQ);
+        true ->
+          maps:get(Username,Online),
+          io:format("~p~n",[Username]),
+	        {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Online),
+	        On = maps:update(Username,{Massa,Velo,Dir+10,X,Y,H,W},Online),
+	        Dados = "online_upd_right " ++ Username ++ " " ++ integer_to_list(Dir+10) ++ "\n",
 	        [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks], 
           estado(On,Planetas,EsperaQ)
       end;
