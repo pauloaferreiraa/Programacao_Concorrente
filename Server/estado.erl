@@ -1,26 +1,11 @@
 -module(estado).
 -export([start/0]).
+-import(avatar,[geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_colision/2]).
+
 
 start() ->
   Pid = spawn(fun() -> estado(#{}, #{}, queue:new(),[]) end),
   register(?MODULE, Pid).
-
-geraAvatarJogador() -> %{massa,velocidade,direcao,x,y,largura,altura}
-  {1, 20, 120.0, rand:uniform(500)+0.0, 50.0, 50, 50}.
-
-
-geraAvatarPlaneta(P) -> %{massa,velocidade,x,y}
-  Massa = 150 + rand:uniform(50),
-  Velocidade = 10 + rand:uniform(20),
-  if
-    P == 1 ->
-      {Massa,Velocidade,200.0,200.0,1};
-    P == 2 -> %{massa,velocidade,x,y}
-      {Massa,Velocidade,200.0,500.0,1};
-    P == 3 -> %{massa,velocidade,x,y}
-      {Massa,Velocidade,200.0,800.0,1};
-    true -> error
-end.
 
 
 %funcao que recebe socket do user que acabou de fazer login e map dos Online e envia mensagem
@@ -40,19 +25,8 @@ login_estado(Online,Planetas,Socket) ->
                  || {N,{Massa, Velo, X, Y,_S}} <- Pla]
   end.
 
-check_edges_planet(Planetas,P) ->
-  if
-    P == 3 -> Planetas;
-    true ->
-      {M,V,X,Y,S} = maps:get(P,Planetas),
-      if
-        X > 1200-(M/2) ->
-          check_edges_planet(maps:update(P, {M,V,X+(V*-S),Y,-S},Planetas),P+1);      
-        X < (M/2) -> check_edges_planet(maps:update(P,{M,V,X+(V*-S),Y,-S},Planetas),P+1); 
-        true -> check_edges_planet(maps:update(P,{M,V,X+(V*S),Y,S},Planetas),P+1)  
-      end
-  end.
 
+    
 %Online é um map com Username chave e o seu avatar como chave #{Username => {massa,velocidade,direcao,x,y,height,width}}
 estado(Online, Planetas, EsperaQ,Socks) ->
   receive
@@ -99,15 +73,21 @@ estado(Online, Planetas, EsperaQ,Socks) ->
         false ->
           estado(Online,Planetas,EsperaQ,Socks);
         true ->
-          maps:get(Username,Online),
-          %io:format("~p~n",[Username]),
-	        {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Online),
-          NewX = X + (math:cos(Dir*math:pi()/180)*Velo),%converter graus em radianos
-          NewY = Y + (math:sin(Dir*math:pi()/180)*Velo),
-	        On = maps:update(Username,{Massa,Velo,Dir,NewX,NewY,H,W},Online),
-	        Dados = "online_upd_pos " ++ Username ++ " " ++ float_to_list(NewX) ++ " " ++ float_to_list(NewY) ++ "\n",
-	        [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks], 
-          estado(On,Planetas,EsperaQ,Socks)
+          case check_colision(Username,Online) of
+            {error, Dados} ->
+              case queue:out(EsperaQ) of
+                {empty,_Q1} ->
+                  [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <- Socks],
+                  estado(maps:remove(Username,Online),Planetas,EsperaQ,Socks);
+                {{value,Item},Q1} -> %o Item é o Username que esta na queue
+                    [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <- Socks],
+                    estado ! {online,add,Item},
+                    estado(maps:remove(Username,Online),Planetas,Q1,Socks)
+              end;              
+            {On,Dados} ->
+	            [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks],
+              estado(On,Planetas,EsperaQ,Socks)
+          end
       end;
     {left,Username} ->
       case maps:is_key(Username,Online) of

@@ -51,8 +51,11 @@ public class Message extends Thread{
               }
               
               if(sp[0].equals("planeta_upd")){
-                System.out.println("Recebeu");
                 estado.updatePosicaoPlaneta(Integer.parseInt(sp[1]),Float.parseFloat(sp[2]),Float.parseFloat(sp[3]));
+              }
+              
+              if(sp[0].equals("dead")){
+                estado.retiraMorto(sp[1]);
               }
               
             }

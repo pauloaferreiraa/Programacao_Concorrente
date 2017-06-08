@@ -19,7 +19,7 @@ public class Message extends Thread{
             
             while(true){
               String s = in.readLine();
-              System.out.println(s);
+              //System.out.println(s);
               String[] sp = s.split(" "); //dividir strings por espaços
               //System.out.println("Entrou");
               if(sp[0].equals("online")){
@@ -51,8 +51,11 @@ public class Message extends Thread{
               }
               
               if(sp[0].equals("planeta_upd")){
-                System.out.println("Recebeu");
                 estado.updatePosicaoPlaneta(Integer.parseInt(sp[1]),Float.parseFloat(sp[2]),Float.parseFloat(sp[3]));
+              }
+              
+              if(sp[0].equals("dead")){
+                estado.retiraMorto(sp[1]);
               }
               
             }

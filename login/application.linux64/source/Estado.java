@@ -137,6 +137,19 @@ public class Estado{
       }
     }
     
+    public void retiraMorto(String username){
+    
+      l.lock();
+      Jogador j = null;
+      try{
+        for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
+          if(entry.getKey().getUsername().equals(username)) {j = entry.getKey();online.remove(j);break;}
+        }
+      }finally{
+        l.unlock();
+      }
+    }
+    
     public String toString(){
       String s = "";
       for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){

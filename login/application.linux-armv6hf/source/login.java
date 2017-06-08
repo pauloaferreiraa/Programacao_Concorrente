@@ -178,6 +178,7 @@ public void setup(){
 
 public void draw() {
   background(0);
+  //frameRate(5);
   switch (state){
     case main_screen:
       show_main_screen();
@@ -273,7 +274,7 @@ public void keyPressed(){
 }
 
   
-  public void settings() {  size(800,600); }
+  public void settings() {  size(1200,1000); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "login" };
     if (passedArgs != null) {

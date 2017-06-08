@@ -31,7 +31,7 @@ BufferedReader in = null;
 void setup(){
     cp5 = new ControlP5(this);
 
-    size(800,600);
+    size(1200,1000);
     image_main_screen = loadImage("main_screen.jpg");
     image_login = loadImage("login_screen.jpg");
   
@@ -156,6 +156,7 @@ void setup(){
 
 void draw() {
   background(0);
+  //frameRate(5);
   switch (state){
     case main_screen:
       show_main_screen();
