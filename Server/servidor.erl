@@ -12,6 +12,7 @@ server(Port) ->
   Oper = spawn(fun() -> operation() end),
   register(?MODULE,Oper),
   ?MODULE ! {gera_planetas},
+  spawn(fun()->signal_planetas() end),
   acceptor(LSock, Room).
 
 acceptor(LSock, Room) ->
@@ -43,7 +44,7 @@ room(Socks) ->
               if
                 N =< 4 -> 
                   ?MODULE ! {Socket},
-                  ?MODULE ! {online,add,U,Socks};
+                  ?MODULE ! {online,add,U};
                 true -> 
                   ?MODULE ! {Socket},
                   ?MODULE ! {espera,add,U}
@@ -60,7 +61,7 @@ room(Socks) ->
               if
                 N =< 4 -> 
                   ?MODULE ! {Socket},
-                  ?MODULE ! {online,add,U,Socks};
+                  ?MODULE ! {online,add,U};
                 true -> 
                   ?MODULE ! {Socket},
                   ?MODULE ! {espera,add,U}
@@ -78,13 +79,13 @@ room(Socks) ->
           close_account(U, P, Socket);
         "\\walk\n" -> %Caso receba mensagem para andar, mandar para si proprio uma mensagem com a instrucao walk
           Username = logado(Socket),
-          ?MODULE ! {walk,Username,Socks};
+          ?MODULE ! {walk,Username};
         "\\left\n" ->
           Username = logado(Socket),
-          ?MODULE ! {left,Username,Socks};
+          ?MODULE ! {left,Username};
         "\\right\n" ->
           Username = logado(Socket),
-          ?MODULE ! {right,Username,Socks};            
+          ?MODULE ! {right,Username};            
         _ ->
           skip
       end,
@@ -96,7 +97,7 @@ room(Socks) ->
       case logado(Socket) of
         no -> skip;
         Username -> 
-        ?MODULE ! {logout,Username,Socks}      
+        ?MODULE ! {logout,Username,Socket}      
       end,
       
       io:format("user_left ~p~n", [Socket]),
@@ -125,25 +126,35 @@ operation() ->
     {gera_planetas} ->
       estado ! {gera_planetas},
       operation();
-    {walk,Username,Socks} ->
-      estado ! {walk,Username,Socks},
+    {walk,Username} ->
+      estado ! {walk,Username},
       operation();
-    {left,Username,Socks} -> %Muda a direçao do jogador
-      estado ! {left,Username,Socks},
+    {left,Username} -> %Muda a direçao do jogador
+      estado ! {left,Username},
       operation();
-    {right,Username,Socks} ->%Muda a direçao do jogador
-      estado ! {right,Username,Socks},
+    {right,Username} ->%Muda a direçao do jogador
+      estado ! {right,Username},
       operation();
     {espera,add,Username} ->
       estado ! {espera,add,Username},
       operation();
-    {online,add,U,Socks} ->
-      estado ! {online,add,U,Socks},
+    {online,add,U} ->
+      estado ! {online,add,U},
       operation();
     {Socket} ->       % <--------------
 	    estado ! {Socket},
 	    operation();
-    {logout,Username,Socks} ->
-      estado ! {logout,Username,Socks},
+    {logout,Username,Socket} ->
+      estado ! {logout,Username,Socket},
       operation()
   end.
+
+  signal_planetas() ->
+    %estado ! {planetas,self()},
+    timer:send_after(100,estado,{planetas,self()}),
+    receive
+      {back} ->
+        signal_planetas()
+    end.      
+    
+    

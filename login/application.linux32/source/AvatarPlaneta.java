@@ -14,4 +14,8 @@ public class AvatarPlaneta {
       float[] f = {massa,x,y};
       return f;
     }
+    
+    public void updatePos(float x, float y){
+      this.x = x;this.y = y;
+    }
 }

@@ -115,6 +115,16 @@ public class Estado{
       }
     }
     
+    public void updatePosicaoPlaneta(int n,float x, float y){
+      l.lock();
+      try{
+        AvatarPlaneta a = planetas.get(n);
+        a.updatePos(x,y);
+      }finally{
+        l.unlock();
+      }
+    }
+    
     public void logout(String username){
       l.lock();
       Jogador j = null;

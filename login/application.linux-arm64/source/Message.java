@@ -49,6 +49,12 @@ public class Message extends Thread{
                 estado.addPlaneta(Integer.parseInt(sp[1]),
                 new AvatarPlaneta(Float.parseFloat(sp[2]),Float.parseFloat(sp[3]),Float.parseFloat(sp[4]),Float.parseFloat(sp[5])));
               }
+              
+              if(sp[0].equals("planeta_upd")){
+                System.out.println("Recebeu");
+                estado.updatePosicaoPlaneta(Integer.parseInt(sp[1]),Float.parseFloat(sp[2]),Float.parseFloat(sp[3]));
+              }
+              
             }
             
             
