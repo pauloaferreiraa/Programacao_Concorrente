@@ -21,9 +21,16 @@ public class AvatarJogador {
       this.x = x;this.y = y;
     }
     
-    public void updateEnergy(double p1,double p2,double p3){
-       this.p1=p1;this.p2=p2;this.p3=p3;
-       
+    public void updatePropRight(double p3){
+       this.p3=p3;       
+    }
+    
+    public void updatePropLeft(double p2){
+       this.p2=p2;       
+    }
+    
+    public void updatePropFrente(double p1){
+       this.p1=p1;       
     }
     
     public void updateDir(double dir){

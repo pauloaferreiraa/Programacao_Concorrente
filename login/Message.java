@@ -31,15 +31,15 @@ public class Message extends Thread{
                                                                                         Double.parseDouble(sp[11]),Double.parseDouble(sp[12])));
               }
               if(sp[0].equals("online_upd_pos")){
-                estado.updatePosicao(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]));
+                estado.updatePosicao(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]), Double.parseDouble(sp[4]));
               }
               
               if(sp[0].equals("online_upd_left")){
-                estado.updateDirecao(sp[1],Double.parseDouble(sp[2]));
+                estado.updateDirecao(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]), 2);
               }
               
               if(sp[0].equals("online_upd_right")){
-                estado.updateDirecao(sp[1],Double.parseDouble(sp[2]));
+                estado.updateDirecao(sp[1],Double.parseDouble(sp[2]), Double.parseDouble(sp[3]), 3);
               }
               
               
@@ -60,8 +60,8 @@ public class Message extends Thread{
                 estado.retiraMorto(sp[1]);
               }
               
-              if(sp[0].equals("online_upd_energy")){
-                 estado.updateEnergy(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]),Double.parseDouble(sp[4]));
+              if(sp[0].equals("charge")){
+                estado.carrega(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]),Double.parseDouble(sp[4]));
               }
               
             }

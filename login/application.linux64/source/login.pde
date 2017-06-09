@@ -149,7 +149,7 @@ void setup(){
                     }
                   });
      
-    
+      //frame.setResizable(true);
                   
     
 }
@@ -209,16 +209,24 @@ void show_login(){
 }
 
 void show_game_screen(){
+  //c-canto s-superior e-esquerdo
+  float x_CSE = 40;
+  float y_CIE = height-60;
+  float x_CSD = width-60;
+  float y_CID = height-60;
   //frameRate(5);
   background(255);
   String[] nomes = estado.getNome();
   double[][] elem = estado.atributosJogador();
   float[][] planetas = estado.getPlanetas();
-  int space=0;
+  int space=20;
   for(int i = 0;i<planetas.length;i++){
     px = planetas[i][1]; py = planetas[i][2]; h = planetas[i][0]; w = planetas[i][0];
     ellipse(px,py,h,w);
   }
+    PFont pfont_small = createFont("Arial",12,true);
+    PFont pfont = createFont("Arial",20,true);
+ 
   for(int i = 0;i<elem.length;i++){
     x = (float)elem[i][0];y = (float)elem[i][1];
     
@@ -230,11 +238,46 @@ void show_game_screen(){
     popMatrix();
     fill(255,0,0);
     if(!(nomes[i] == null)){
-      text(nomes[i],width-textWidth(nomes[i]),30+space);
-      space+=20;
-    } 
-  }
+         String strNome = "Nome:";
+         String strFrente = "Frente:";
+         String strEsq = "Esq:";
+         String strDir = "Dir:";
+        if(i==0){
+           textFont(pfont_small);
+           text(strNome,x_CSE-textWidth(strNome),space);
+           text(strFrente,x_CSE-textWidth(strNome),space+20);
+           text(strEsq,x_CSE-textWidth(strNome),space+40);
+           text(strDir,x_CSE-textWidth(strNome),space+60);
+           textFont(pfont);
+           
+           text(nomes[0],x_CSE,space);
+           space+=20;
+           text(Double.toString(elem[0][5]),x_CSE,space);
+            space+=20;     
+           text(Double.toString(elem[0][6]),x_CSE,space);
+            space+=20;
+           text(Double.toString(elem[0][7]),x_CSE,space);
+      }   
+          space=20;
+          if(i==1){
+           textFont(pfont_small);
+           text(strNome,x_CSD-textWidth(strNome),space);
+           text(strFrente,x_CSD-textWidth(strNome),space+20);
+           text(strEsq,x_CSD-textWidth(strNome),space+40);
+           text(strDir,x_CSD-textWidth(strNome),space+60);
+           textFont(pfont);
+           
+           text(nomes[1],x_CSD,space);
+           space+=20;
+           text(Double.toString(elem[1][5]),x_CSD,space);
+            space+=20;     
+           text(Double.toString(elem[1][6]),x_CSD,space);
+            space+=20;
+           text(Double.toString(elem[1][7]),x_CSD,space);
+    }
   
+    }
+  }
 }
 
 void keyPressed(){

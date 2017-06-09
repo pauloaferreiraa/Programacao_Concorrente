@@ -1,5 +1,5 @@
 -module(avatar).
--export([geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_colision/2]).
+-export([geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_colision/2,charge_propulsor/3]).
 
 
 geraAvatarJogador() -> %{massa,velocidade,direcao,x,y,largura,altura, prop frente, prop esq, prop dir}
@@ -37,8 +37,43 @@ check_colision(Username,Avatares) ->
   if 
     (X < 0) or (X > 1200) or (Y < 0) or (Y > 1200) -> {error,"dead " ++ Username ++ "\n"};
     true -> 
-      NewX = X + (math:cos(Dir*math:pi()/180)*Velo),%converter graus em radianos
-      NewY = Y + (math:sin(Dir*math:pi()/180)*Velo),
-      {maps:update(Username,{Massa,Velo,Dir,NewX,NewY,H,W,Pf,Pe,Pd},Avatares),"online_upd_pos " ++ Username ++ " " ++ float_to_list(NewX) ++ " " ++ float_to_list(NewY) ++ "\n",
-        "online_upd_energy " ++ Username ++ " " ++ integer_to_list(Pf) ++" "++integer_to_list(Pe)++" "++ integer_to_list(Pd) ++ "\n"}
+      case Pf of
+			  N when N>0 -> 
+              NewX = X + (math:cos(Dir*math:pi()/180)*Velo),
+						  NewY = Y + (math:sin(Dir*math:pi()/180)*Velo),
+	        		On = maps:update(Username,{Massa,Velo,Dir,NewX,NewY,H,W,Pf-5,Pe,Pd},Avatares),
+              {On,"online_upd_pos " ++ Username ++ " " ++ float_to_list(NewX) ++ " " ++ float_to_list(NewY) ++ " " ++ integer_to_list(Pf-5) ++ "\n"};
+			  0 -> 
+          On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W,Pf,Pe,Pd},Avatares),
+          {On,"online_upd_pos " ++ Username ++ " " ++ float_to_list(X) ++ " " ++ float_to_list(Y) ++ " " ++ integer_to_list(Pf) ++ "\n"}         
+		  end
+  end.
+
+charge_propulsor(Username,Prop,Avatares) ->
+  {Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd} = maps:get(Username,Avatares),
+  case Prop of
+    "Pe" ->
+      if
+        Pe == 100 -> {full};
+        Pe < 100 -> 
+          On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf, Pe + 5, Pd},Avatares),
+          Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf) ++ " " ++integer_to_list(Pe+5) ++ " " ++ integer_to_list(Pd) ++ "\n",
+          {On,Msg}
+      end;
+    "Pd" ->
+      if
+        Pd == 100 -> {full};
+        Pd < 100 ->
+          On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd + 5},Avatares),
+          Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf) ++ " " ++ integer_to_list(Pe) ++ " " ++ integer_to_list(Pd + 5) ++ "\n",
+          {On,Msg}
+      end;
+    "Pf" ->
+      if
+        Pf == 100 -> {full};
+        Pf < 100 ->
+          On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf + 5, Pe, Pd},Avatares),
+          Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf + 5) ++ " " ++ integer_to_list(Pe) ++ " " ++ integer_to_list(Pd) ++ "\n",
+          {On,Msg}
+      end
   end.

@@ -90,38 +90,61 @@ public class Estado{
       }
     }
     
-    public void updatePosicao(String username,double x, double y){
+    public void updatePosicao(String username,double x, double y, double energia){
       l.lock();
       
       try{
-        Jogador j = null;
+        AvatarJogador j = null;
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
-          if(entry.getKey().getUsername().equals(username)) entry.getValue().updatePos(x,y);
+          if(entry.getKey().getUsername().equals(username)){
+            j = entry.getValue();
+            j.updatePos(x,y);
+            j.updatePropFrente(energia);
+            break;
+          }
         }
       }finally{
         l.unlock();
       }
     }
     
-    public void updateEnergy(String username,Double p1, Double p2, Double p3){
-        l.lock();
-         try{
-             Jogador j = null;
-              for(Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
-               if(entry.getKey().getUsername().equals(username)) entry.getValue().updateEnergy(p1,p2,p3); 
-               }
-         }finally{
-               l.unlock();
-         }
+    public void carrega(String username, double p1, double p2, double p3){
+      l.lock();
+      try{
+        AvatarJogador j = null;
+        for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
+          if(entry.getKey().getUsername().equals(username)){
+            j = entry.getValue();
+            j.updatePropFrente(p1);
+            j.updatePropLeft(p2);
+            j.updatePropRight(p3);
+            break;
+          }
+        }
+      }finally{
+        l.unlock();
+      }
     }
     
-    public void updateDirecao(String username,double dir){
+    public void updateDirecao(String username,double dir, double energia, int p){
       l.lock();
       
       try{
-        Jogador j = null;
+        AvatarJogador j = null;
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
-          if(entry.getKey().getUsername().equals(username)) entry.getValue().updateDir(dir);
+          if(entry.getKey().getUsername().equals(username)){
+            j = entry.getValue();
+            j.updateDir(dir);
+            switch(p){
+              case 2:
+                j.updatePropLeft(energia);
+                break;
+              case 3:
+                j.updatePropRight(energia);
+                break;
+            }
+            break;
+          }
         }
       }finally{
         l.unlock();

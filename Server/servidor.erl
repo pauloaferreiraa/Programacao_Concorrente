@@ -13,6 +13,8 @@ server(Port) ->
   register(?MODULE,Oper),
   ?MODULE ! {gera_planetas},
   spawn(fun()->signal_planetas() end),
+  Carrega = spawn(fun()->charge_prop() end),
+  register(charge,Carrega),
   acceptor(LSock, Room).
 
 acceptor(LSock, Room) ->
@@ -155,6 +157,19 @@ operation() ->
     receive
       {back} ->
         signal_planetas()
-    end.      
+    end.
+
+charge_prop() ->
+  receive
+    {left,Username} ->
+      timer:send_after(5000,estado,{charge,Username,"Pe"}),
+      charge_prop();      
+    {right,Username} ->
+      timer:send_after(5000,estado,{charge,Username,"Pd"}),
+      charge_prop();
+    {walk,Username} ->
+      timer:send_after(5000,estado,{charge,Username,"Pf"}),
+      charge_prop()
+  end.      
     
     
