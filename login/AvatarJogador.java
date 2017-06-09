@@ -8,13 +8,22 @@ public class AvatarJogador {
     private double direcao; //angulo em graus
     private double x, y; //coordenadas do jogador
     private double h,w; //altura e largura do avatar
+    private double p1; // propulsor frente
+    private double p2; // propulsor esq
+    private double p3; // propulsor dir
     
-    AvatarJogador(double massa,double velocidade, double direcao, double x, double y, double h, double w){
+    AvatarJogador(double massa,double velocidade, double direcao, double x, double y, double h, double w, double p1, double p2, double p3){
       this.massa = massa;this.velocidade = velocidade; this.direcao = direcao; this.x = x; this.y = y; this.h = h; this.w = w;
+      this.p1 = p1; this.p2 = p2; this.p3 = p3;
     }
     
     public void updatePos(double x, double y){
       this.x = x;this.y = y;
+    }
+    
+    public void updateEnergy(double p1,double p2,double p3){
+       this.p1=p1;this.p2=p2;this.p3=p3;
+       
     }
     
     public void updateDir(double dir){
@@ -25,7 +34,7 @@ public class AvatarJogador {
     }
     
     public double[] getAtributos(){
-      double[] feat = {x,y,h,w,direcao};
+      double[] feat = {x,y,h,w,direcao,p1,p2,p3};
       
       return feat;
     }

@@ -26,7 +26,9 @@ public class Message extends Thread{
                 estado.addPlayer(new Jogador(sp[1],Double.parseDouble(sp[2])),new AvatarJogador(Double.parseDouble(sp[3]),Double.parseDouble(sp[4]),
                                                                                         Double.parseDouble(sp[5]),Double.parseDouble(sp[6]),
                                                                                         Double.parseDouble(sp[7]),Double.parseDouble(sp[8]),
-                                                                                        Double.parseDouble(sp[9])));
+                                                                                        Double.parseDouble(sp[9]),
+                                                                                        Double.parseDouble(sp[10]),
+                                                                                        Double.parseDouble(sp[11]),Double.parseDouble(sp[12])));
               }
               if(sp[0].equals("online_upd_pos")){
                 estado.updatePosicao(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]));
@@ -56,6 +58,10 @@ public class Message extends Thread{
               
               if(sp[0].equals("dead")){
                 estado.retiraMorto(sp[1]);
+              }
+              
+              if(sp[0].equals("online_upd_energy")){
+                 estado.updateEnergy(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]),Double.parseDouble(sp[4]));
               }
               
             }

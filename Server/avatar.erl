@@ -2,8 +2,8 @@
 -export([geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_colision/2]).
 
 
-geraAvatarJogador() -> %{massa,velocidade,direcao,x,y,largura,altura}
-  {1, 20, 120.0, rand:uniform(500)+0.0, 50.0, 50, 50}.
+geraAvatarJogador() -> %{massa,velocidade,direcao,x,y,largura,altura, prop frente, prop esq, prop dir}
+  {1, 20, 120.0, rand:uniform(500)+0.0, 50.0, 50, 50, 100, 100, 100}.
 
 
 geraAvatarPlaneta(P) -> %{massa,velocidade,x,y}
@@ -33,11 +33,12 @@ check_edges_planet(Planetas,P) ->
   end.
 
 check_colision(Username,Avatares) ->
-  {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Avatares),
+  {Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd} = maps:get(Username,Avatares),
   if 
     (X < 0) or (X > 1200) or (Y < 0) or (Y > 1200) -> {error,"dead " ++ Username ++ "\n"};
     true -> 
       NewX = X + (math:cos(Dir*math:pi()/180)*Velo),%converter graus em radianos
       NewY = Y + (math:sin(Dir*math:pi()/180)*Velo),
-      {maps:update(Username,{Massa,Velo,Dir,NewX,NewY,H,W},Avatares),"online_upd_pos " ++ Username ++ " " ++ float_to_list(NewX) ++ " " ++ float_to_list(NewY) ++ "\n"}
+      {maps:update(Username,{Massa,Velo,Dir,NewX,NewY,H,W,Pf,Pe,Pd},Avatares),"online_upd_pos " ++ Username ++ " " ++ float_to_list(NewX) ++ " " ++ float_to_list(NewY) ++ "\n",
+        "online_upd_energy " ++ Username ++ " " ++ integer_to_list(Pf) ++" "++integer_to_list(Pe)++" "++ integer_to_list(Pd) ++ "\n"}
   end.

@@ -58,11 +58,12 @@ estado(Online, Planetas, EsperaQ,Socks) ->
 		  login_estado(Online,Planetas,Socket),
 		  estado(Online,Planetas,EsperaQ,Socks++[Socket]);
     {online, add, Username} ->
-      {Massa, Velo, Dir, X, Y, H, W} = geraAvatarJogador(),
+      {Massa, Velo, Dir, X, Y, H, W,Pf,Pe,Pd} = geraAvatarJogador(),
       Dados = "online " ++ Username ++ " 0.0 " ++ integer_to_list(Massa) ++ " " ++ integer_to_list(Velo) ++ " " ++ float_to_list(Dir) 
-                ++ " " ++ float_to_list(X) ++ " " ++ float_to_list(Y) ++ " " ++ integer_to_list(H) ++ " " ++ integer_to_list(W) ++ "\n",
+                ++ " " ++ float_to_list(X) ++ " " ++ float_to_list(Y) ++ " " ++ integer_to_list(H) 
+                ++ " " ++ integer_to_list(W) ++" "++ integer_to_list(Pf) ++ " " ++ integer_to_list(Pe) ++ " " ++ integer_to_list(Pd)++ "\n",
       [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <- Socks], %enviar os dados do jogador
-      On = maps:put(Username, {Massa, Velo, Dir, X, Y, H, W}, Online),
+      On = maps:put(Username, {Massa, Velo, Dir, X, Y, H, W,Pf,Pe,Pd}, Online),
       estado(On,Planetas,EsperaQ,Socks);
     {espera, add, Username} ->
       Q = queue:in(Username,EsperaQ),
@@ -84,7 +85,8 @@ estado(Online, Planetas, EsperaQ,Socks) ->
                     estado ! {online,add,Item},
                     estado(maps:remove(Username,Online),Planetas,Q1,Socks)
               end;              
-            {On,Dados} ->
+            {On,Dados,Energia} ->
+              [gen_tcp:send(Socket,list_to_binary(Energia)) || Socket <-Socks], 
 	            [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks],
               estado(On,Planetas,EsperaQ,Socks)
           end
@@ -96,10 +98,16 @@ estado(Online, Planetas, EsperaQ,Socks) ->
         true ->
           maps:get(Username,Online),
           %io:format("~p~n",[Username]),
-	        {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Online),
-	        On = maps:update(Username,{Massa,Velo,Dir-10,X,Y,H,W},Online),
+	        {Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd} = maps:get(Username,Online),
+          case Pe of 
+				    N when N > 0 -> On = maps:update(Username,{Massa,Velo,Dir-10,X,Y,H,W,Pf,Pe-5,Pd},Online);
+				    0 ->  On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W,Pf,Pe,Pd},Online)
+			    end,
+	        %On = maps:update(Username,{Massa,Velo,Dir-10,X,Y,H,W,Pf,Pe,Pd},Online),
 	        Dados = "online_upd_left " ++ Username ++ " " ++ float_to_list(Dir-10) ++ "\n",
-	        [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks], 
+          Energia = "online_upd_energy " ++ Username ++" " ++ integer_to_list(Pf)++" "++integer_to_list(Pe)++" "++integer_to_list(Pd) ++ "\n",
+	        [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks],
+          [gen_tcp:send(Socket,list_to_binary(Energia))|| Socket <-Socks],
           estado(On,Planetas,EsperaQ,Socks)
       end;
     {right,Username} ->
@@ -109,9 +117,15 @@ estado(Online, Planetas, EsperaQ,Socks) ->
         true ->
           maps:get(Username,Online),
           %io:format("~p~n",[Username]),
-	        {Massa,Velo,Dir,X,Y,H,W} = maps:get(Username,Online),
-	        On = maps:update(Username,{Massa,Velo,Dir+10,X,Y,H,W},Online),
+	        {Massa,Velo,Dir,X,Y,H,W,Pf,Pe,Pd} = maps:get(Username,Online),
+          case Pd of 
+				    N when N>0 -> On = maps:update(Username,{Massa,Velo,Dir+10,X,Y,H,W,Pf,Pe,Pd-5},Online);
+				    0 -> On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W,Pf,Pe,Pd},Online)
+			    end,
+	        %On = maps:update(Username,{Massa,Velo,Dir+10,X,Y,H,W,Pf,Pe,Pd},Online),
 	        Dados = "online_upd_right " ++ Username ++ " " ++ float_to_list(Dir+10) ++ "\n",
+          Energia = "online_upd_energy " ++ Username ++" " ++ integer_to_list(Pf)++" "++integer_to_list(Pe)++" "++integer_to_list(Pd) ++ "\n",
+			    [gen_tcp:send(Socket,list_to_binary(Energia)) || Socket <- Socks], 
 	        [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks], 
           estado(On,Planetas,EsperaQ,Socks)
       end;

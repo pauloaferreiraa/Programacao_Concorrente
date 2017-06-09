@@ -72,7 +72,7 @@ public class Estado{
     public double[][] atributosJogador(){
       l.lock();
       
-      double[][] elementos = new double[4][5];
+      double[][] elementos = new double[4][8];
       int i = 0;
       try{
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
@@ -80,7 +80,8 @@ public class Estado{
           //System.out.println(entry.getKey().toString() + entry.getValue().toString());
           elementos[i][0] = atr[0]; elementos[i][1] = atr[1];
           elementos[i][2] = atr[2]; elementos[i][3] = atr[3];
-          elementos[i][4] = atr[4];
+          elementos[i][4] = atr[4]; elementos[i][5] = atr[5];
+          elementos[i][6] = atr[6]; elementos[i][7] = atr[7];
           i++;
         }
       }finally{
@@ -100,6 +101,18 @@ public class Estado{
       }finally{
         l.unlock();
       }
+    }
+    
+    public void updateEnergy(String username,Double p1, Double p2, Double p3){
+        l.lock();
+         try{
+             Jogador j = null;
+              for(Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
+               if(entry.getKey().getUsername().equals(username)) entry.getValue().updateEnergy(p1,p2,p3); 
+               }
+         }finally{
+               l.unlock();
+         }
     }
     
     public void updateDirecao(String username,double dir){
