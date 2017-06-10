@@ -45,10 +45,10 @@ room(Socks) ->
               gen_tcp:send(Socket,<<"ok_login\n">>),
               if
                 N =< 4 -> 
-                  ?MODULE ! {Socket},
+                  ?MODULE ! {Socket,U},
                   ?MODULE ! {online,add,U};
                 true -> 
-                  ?MODULE ! {Socket},
+                  ?MODULE ! {Socket,U},
                   ?MODULE ! {espera,add,U}
               end;                                     
             {invalid,_} ->
@@ -62,10 +62,10 @@ room(Socks) ->
               gen_tcp:send(Socket,<<"ok_create_account\n">>),
               if
                 N =< 4 -> 
-                  ?MODULE ! {Socket},
+                  ?MODULE ! {Socket,U},
                   ?MODULE ! {online,add,U};
                 true -> 
-                  ?MODULE ! {Socket},
+                  ?MODULE ! {Socket,U},
                   ?MODULE ! {espera,add,U}
               end;   
             {user_exists,_} -> 
@@ -143,8 +143,8 @@ operation() ->
     {online,add,U} ->
       estado ! {online,add,U},
       operation();
-    {Socket} ->       % <--------------
-	    estado ! {Socket},
+    {Socket,U} ->       % <--------------
+	    estado ! {time,Socket,U},
 	    operation();
     {logout,Username,Socket} ->
       estado ! {logout,Username,Socket},

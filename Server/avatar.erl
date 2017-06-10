@@ -1,5 +1,5 @@
 -module(avatar).
--export([geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_edges_player/2,charge_propulsor/3,check_collision_planet/2,check_collision_players/3]).
+-export([geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_edges_player/2,charge_propulsor/3,check_collision_planet/2,check_collision_players/4]).
 
 
 geraAvatarJogador() -> %{massa,velocidade,direcao,x,y,largura,altura, prop frente, prop esq, prop dir}
@@ -45,30 +45,32 @@ check_collision_planet(Planetas,[H | T]) ->
   D1 = distance(XA,YA,X1,Y1),
   D2 = distance(XA,YA,X2,Y2),
   if
-    D < ((HA/2) + (M/2)) -> {error, "dead " ++ U ++ "\n",U};
-    D1 < ((HA/2) + (M1/2)) -> {error, "dead " ++ U ++ "\n",U};
-    D2 < ((HA/2) + (M2/2)) -> {error, "dead " ++ U ++ "\n",U};
+    D < ((HA/2) + (M/2)) -> {error, U};
+    D1 < ((HA/2) + (M1/2)) -> {error, U};
+    D2 < ((HA/2) + (M2/2)) -> {error, U};
     true -> check_collision_planet(Planetas,T)
   end;
 check_collision_planet(_Planetas,[]) ->
   {ok}.
 
-check_collision_players(Username,A,[H | T])->
-    {U,{_,_,_,XA1,YA1,HA1,_,_,_,_}} = H,
+check_collision_players(Online,Username,A,[H | T])->
+    {U,{MA1,VA1,DA1,XA1,YA1,HA1,WA1,PfA1,PeA1,PdA1}} = H,
     case U of
-      Username -> check_collision_players(Username,A,T);
+      Username -> check_collision_players(Online,Username,A,T);
       _ ->
         {_,_,_,XA,YA,HA,_,_,_,_} = A,
         D = distance(XA,YA,XA1,YA1),
-        minDistance = ((HA/2) + (HA1/2)),
+        MinDistance = ((HA/2) + (HA1/2)),
         if 
-          D < minDistance -> 
-            io:format("Bateram"),
-            check_collision_players(Username,A,T);
-          true -> check_collision_players(Username,A,T)
+          D < MinDistance ->
+            NewX = 0.0+rand:uniform(100)+XA,
+            NewY = 0.0+rand:uniform(100)+YA,
+            On = maps:update(U,{MA1,VA1,DA1,NewX,NewY,HA1,WA1,PfA1,PeA1,PdA1},Online),
+            {error,On,"online_upd_pos " ++ U ++ " " ++ float_to_list(NewX) ++ " " ++ float_to_list(NewY) ++ " " ++ integer_to_list(PfA1) ++ "\n"};
+          true -> check_collision_players(Online,Username,A,T)
         end
     end;
-check_collision_players(Username,A,[]) ->
+check_collision_players(_Online,_Username,_A,[]) ->
   {ok}.
 
 
@@ -76,7 +78,7 @@ check_edges_player(Username,Avatares) ->
   {Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd} = maps:get(Username,Avatares),
 	
   if
-    (X < 0) or (X > 1200) or (Y < 0) or (Y > 1200) -> {error,"dead " ++ Username ++ "\n"};
+    (X < 0) or (X > 1200) or (Y < 0) or (Y > 1200) -> {error,Username};
     true -> 
       case Pf of
 			  N when N>0 -> 
