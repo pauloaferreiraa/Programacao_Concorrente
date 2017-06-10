@@ -1,6 +1,6 @@
 -module(estado).
 -export([start/0]).
--import(avatar,[geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_colision/2,charge_propulsor/3]).
+-import(avatar,[geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_edges_player/2,charge_propulsor/3,check_collision_planet/2,check_collision_players/3]).
 
 
 start() ->
@@ -43,11 +43,26 @@ estado(Online, Planetas, EsperaQ,Socks) ->
           estado(Online,Planetas,EsperaQ,Socks);
         _ ->
           P = check_edges_planet(Planetas,0),
-          Pla = maps:to_list(P),
-          [gen_tcp:send(Socket,list_to_binary("planeta_upd " ++ integer_to_list(N) ++ " " ++ float_to_list(X) ++ " " 
-              ++ float_to_list(Y) ++ "\n")) || Socket <- Socks, {N,{_Massa, _Velo, X, Y,_S}} <- Pla],
-          From ! {back},
-          estado(Online,P,EsperaQ,Socks)
+          case check_collision_planet(Planetas,maps:to_list(Online)) of
+            {ok} ->
+              Pla = maps:to_list(P),
+              [gen_tcp:send(Socket,list_to_binary("planeta_upd " ++ integer_to_list(N) ++ " " ++ float_to_list(X) ++ " " 
+                ++ float_to_list(Y) ++ "\n")) || Socket <- Socks, {N,{_Massa, _Velo, X, Y,_S}} <- Pla],
+              From ! {back},
+              estado(Online,P,EsperaQ,Socks);
+            {error,Msg,Username} ->
+              case queue:out(EsperaQ) of
+                {empty,_Q1} ->
+                  [gen_tcp:send(Socket,list_to_binary(Msg)) || Socket <- Socks],
+                  From ! {back},
+                  estado(maps:remove(Username,Online),Planetas,EsperaQ,Socks);
+                {{value,Item},Q1} -> %o Item é o Username que esta na queue
+                    [gen_tcp:send(Socket,list_to_binary(Msg)) || Socket <- Socks],
+                    estado ! {online,add,Item},
+                    From ! {back},
+                    estado(maps:remove(Username,Online),Planetas,Q1,Socks)
+              end
+          end          
       end;  
     {Socket} ->      %<--------
 		  login_estado(Online,Planetas,Socket),
@@ -69,7 +84,7 @@ estado(Online, Planetas, EsperaQ,Socks) ->
         false ->
           estado(Online,Planetas,EsperaQ,Socks);
         true ->
-          case check_colision(Username,Online) of
+          case check_edges_player(Username,Online) of
             {error, Dados} ->
               case queue:out(EsperaQ) of
                 {empty,_Q1} ->
@@ -81,6 +96,10 @@ estado(Online, Planetas, EsperaQ,Socks) ->
                     estado(maps:remove(Username,Online),Planetas,Q1,Socks)
               end;              
             {On,Dados} ->
+              case check_collision_players(Username,maps:get(Username,Online),maps:to_list(Online)) of
+                {no_key} -> skip;
+                {ok} -> skip
+              end,
               charge ! {walk,Username},  
 	            [gen_tcp:send(Socket,list_to_binary(Dados)) || Socket <-Socks],
               estado(On,Planetas,EsperaQ,Socks)
@@ -123,6 +142,7 @@ estado(Online, Planetas, EsperaQ,Socks) ->
       end;
     {charge,Username,Prop} ->
       case charge_propulsor(Username,Prop,Online) of
+        {error} -> estado(Online,Planetas,EsperaQ,Socks);
         {full} -> estado(Online,Planetas,EsperaQ,Socks);
         {On,Msg} -> 
           [gen_tcp:send(Socket,list_to_binary(Msg)) || Socket <-Socks],

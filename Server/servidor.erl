@@ -98,7 +98,7 @@ room(Socks) ->
     {leave, Socket} ->
       case logado(Socket) of
         no -> skip;
-        Username -> 
+        Username ->
         ?MODULE ! {logout,Username,Socket}      
       end,
       

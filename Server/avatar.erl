@@ -1,12 +1,12 @@
 -module(avatar).
--export([geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_colision/2,charge_propulsor/3]).
+-export([geraAvatarJogador/0,geraAvatarPlaneta/1,check_edges_planet/2,check_edges_player/2,charge_propulsor/3,check_collision_planet/2,check_collision_players/3]).
 
 
 geraAvatarJogador() -> %{massa,velocidade,direcao,x,y,largura,altura, prop frente, prop esq, prop dir}
   {1, 20, 120.0, rand:uniform(500)+0.0, 50.0, 50, 50, 100, 100, 100}.
 
 
-geraAvatarPlaneta(P) -> %{massa,velocidade,x,y}
+geraAvatarPlaneta(P) -> %{massa,velocidade,x,y,s}
   Massa = 150 + rand:uniform(50),
   Velocidade = 10 + rand:uniform(20),
   if
@@ -32,9 +32,50 @@ check_edges_planet(Planetas,P) ->
       end
   end.
 
-check_colision(Username,Avatares) ->
+distance(X,Y,X1,Y1) ->
+   math:sqrt( math:pow(abs(X1-X),2) + math:pow(abs(Y1-Y),2)).
+
+
+check_collision_planet(Planetas,[H | T]) ->
+  {M,_V,X,Y,_S} = maps:get(0,Planetas),
+  {M1,_V1,X1,Y1,_S1} = maps:get(1,Planetas),
+  {M2,_V2,X2,Y2,_S2} = maps:get(2,Planetas),
+  {U,{_,_,_,XA,YA,HA,_,_,_,_}} = H,
+  D = distance(XA,YA,X,Y),
+  D1 = distance(XA,YA,X1,Y1),
+  D2 = distance(XA,YA,X2,Y2),
+  if
+    D < ((HA/2) + (M/2)) -> {error, "dead " ++ U ++ "\n",U};
+    D1 < ((HA/2) + (M1/2)) -> {error, "dead " ++ U ++ "\n",U};
+    D2 < ((HA/2) + (M2/2)) -> {error, "dead " ++ U ++ "\n",U};
+    true -> check_collision_planet(Planetas,T)
+  end;
+check_collision_planet(_Planetas,[]) ->
+  {ok}.
+
+check_collision_players(Username,A,[H | T])->
+    {U,{_,_,_,XA1,YA1,HA1,_,_,_,_}} = H,
+    case U of
+      Username -> check_collision_players(Username,A,T);
+      _ ->
+        {_,_,_,XA,YA,HA,_,_,_,_} = A,
+        D = distance(XA,YA,XA1,YA1),
+        minDistance = ((HA/2) + (HA1/2)),
+        if 
+          D < minDistance -> 
+            io:format("Bateram"),
+            check_collision_players(Username,A,T);
+          true -> check_collision_players(Username,A,T)
+        end
+    end;
+check_collision_players(Username,A,[]) ->
+  {ok}.
+
+
+check_edges_player(Username,Avatares) ->
   {Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd} = maps:get(Username,Avatares),
-  if 
+	
+  if
     (X < 0) or (X > 1200) or (Y < 0) or (Y > 1200) -> {error,"dead " ++ Username ++ "\n"};
     true -> 
       case Pf of
@@ -50,30 +91,34 @@ check_colision(Username,Avatares) ->
   end.
 
 charge_propulsor(Username,Prop,Avatares) ->
-  {Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd} = maps:get(Username,Avatares),
-  case Prop of
-    "Pe" ->
-      if
-        Pe == 100 -> {full};
-        Pe < 100 -> 
-          On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf, Pe + 5, Pd},Avatares),
-          Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf) ++ " " ++integer_to_list(Pe+5) ++ " " ++ integer_to_list(Pd) ++ "\n",
-          {On,Msg}
-      end;
-    "Pd" ->
-      if
-        Pd == 100 -> {full};
-        Pd < 100 ->
-          On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd + 5},Avatares),
-          Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf) ++ " " ++ integer_to_list(Pe) ++ " " ++ integer_to_list(Pd + 5) ++ "\n",
-          {On,Msg}
-      end;
-    "Pf" ->
-      if
-        Pf == 100 -> {full};
-        Pf < 100 ->
+  case maps:is_key(Username,Avatares) of
+    false -> {error};
+    true ->
+      {Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd} =maps:get(Username,Avatares),
+      case Prop of
+        "Pe" ->
+        if
+          Pe == 100 -> {full};
+          Pe < 100 -> 
+            On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf, Pe + 5, Pd},Avatares),
+            Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf) ++ " " ++integer_to_list(Pe+5) ++ " " ++ integer_to_list(Pd) ++ "\n",
+            {On,Msg}
+        end;
+      "Pd" ->
+        if
+          Pd == 100 -> {full};
+          Pd < 100 ->
+            On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf, Pe, Pd + 5},Avatares),
+            Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf) ++ " " ++ integer_to_list(Pe) ++ " " ++ integer_to_list(Pd + 5) ++ "\n",
+            {On,Msg}
+        end;
+      "Pf" ->
+        if
+          Pf == 100 -> {full};
+          Pf < 100 ->
           On = maps:update(Username,{Massa,Velo,Dir,X,Y,H,W, Pf + 5, Pe, Pd},Avatares),
           Msg = "charge " ++ Username ++ " " ++ integer_to_list(Pf + 5) ++ " " ++ integer_to_list(Pe) ++ " " ++ integer_to_list(Pd) ++ "\n",
           {On,Msg}
+        end
       end
   end.
