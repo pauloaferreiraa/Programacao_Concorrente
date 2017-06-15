@@ -14,7 +14,9 @@ server(Port) ->
   ?MODULE ! {gera_planetas},
   spawn(fun()->signal_planetas() end),
   Carrega = spawn(fun()->charge_prop() end),
+  Pontua = spawn(fun()->pontuacoes() end),
   register(charge,Carrega),
+  register(pontuar,Pontua),
   acceptor(LSock, Room).
 
 acceptor(LSock, Room) ->
@@ -74,7 +76,8 @@ room(Socks) ->
         "\\logout " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
-          logout(U, P, Socket);
+          logout(U, P, Socket),
+          ?MODULE ! {logout,U,Socket};
         "\\close_account " ++ Dados ->
           St = string:tokens(Dados, " "),
           [U | P] = St,
@@ -170,6 +173,12 @@ charge_prop() ->
     {walk,Username} ->
       timer:send_after(5000,estado,{charge,Username,"Pf"}),
       charge_prop()
-  end.      
+  end.
+
+pontuacoes() ->
+  timer:send_after(1000,estado,{pontua}),
+    receive
+      {back} -> pontuacoes()
+    end.    
     
     

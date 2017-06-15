@@ -3,18 +3,25 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Comparator;
+import java.util.TreeSet;
 import java.util.concurrent.locks.*;
 
+  
 public class Estado{
     private Map<Jogador, AvatarJogador> online;
     private Map<Jogador, AvatarJogador> espera;
     private Map<Integer,AvatarPlaneta> planetas;
+    private TreeSet<Jogador> topPontuacao;
+    private TreeSet<Jogador> topServidor;
     private Lock l = new ReentrantLock();
     
     Estado(){
       online = new HashMap();
       espera = new HashMap();
       planetas = new HashMap();
+      topPontuacao = new TreeSet();
+      topServidor = new TreeSet();
     }
     
     
@@ -161,26 +168,82 @@ public class Estado{
       }
     }
     
-    public void logout(String username){
+    public void logout(String username,int pontuacao){
       l.lock();
+      boolean changed = false;
       Jogador j = null;
       try{
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
-          if(entry.getKey().getUsername().equals(username)) {j = entry.getKey();online.remove(j);break;}
+          if(entry.getKey().getUsername().equals(username)) {
+          j = entry.getKey();
+          for(Jogador j1:topPontuacao){
+            if(username.equals(j1.getUsername())){topPontuacao.remove(j1); break;}
+          }
+          for(Jogador j1: topServidor){
+            if(username.equals(j1.getUsername()) && pontuacao > j1.getPontuacao()){
+              topServidor.remove(j1);
+              j = new Jogador(username,pontuacao);
+              topServidor.add(j);
+              changed=true;
+              break;
+            }
+          }
+            if(!changed) topServidor.add(new Jogador(username,pontuacao));    
+
+          online.remove(j);break;}
         }
       }finally{
         l.unlock();
       }
     }
     
-    public void retiraMorto(String username){
+    
+    public void retiraMorto(String username,int pontuacao){
     
       l.lock();
+      boolean changed = false;
       Jogador j = null;
       try{
         for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
-          if(entry.getKey().getUsername().equals(username)) {j = entry.getKey();online.remove(j);break;}
+          if(entry.getKey().getUsername().equals(username)) {
+            j = entry.getKey();
+            for(Jogador j1:topPontuacao){
+              if(username.equals(j1.getUsername())){topPontuacao.remove(j1); break;}
+            }
+             for(Jogador j1: topServidor){
+            if(username.equals(j1.getUsername()) && pontuacao > j1.getPontuacao()){
+              topServidor.remove(j1);
+              j = new Jogador(username,pontuacao);
+              topServidor.add(j);
+              changed=true;
+              break;
+            }
+             }
+            if(!changed) topServidor.add(new Jogador(username,pontuacao));               
+            online.remove(j);break;
+          }
         }
+        topPontuacaoString();
+        topServidorString();
+      }finally{
+        l.unlock();
+      }
+    }
+    
+    public void setPontuacoes(String username, int pontuacao){
+      l.lock();
+      boolean changed = false;
+      try{
+        for(Jogador j:topPontuacao){
+          if(username.equals(j.getUsername()) && pontuacao > j.getPontuacao()){
+            topPontuacao.remove(j);
+            topPontuacao.add(new Jogador(username,pontuacao));
+            changed = true;
+            break;
+          }
+        }
+        if(!changed)
+          topPontuacao.add(new Jogador(username,pontuacao));
       }finally{
         l.unlock();
       }
@@ -191,7 +254,48 @@ public class Estado{
       for (Map.Entry<Jogador,AvatarJogador> entry : online.entrySet()){
         s += entry.getKey().toString() + entry.getValue().toString();
       }
-      
       return s;
     }
+    
+    public String[] topServidorString(){
+    l.lock();
+    String[] jog = new String[topServidor.size()];
+    int i = 0;
+    try{
+      for(Jogador j:topServidor){
+          //System.out.println("1 " + j.toString());
+        jog[i++]= j.toString();
+      }
+    }finally{
+      l.unlock();
+      return jog;
+      }
+    
+    }
+    
+    public void topPontos(String username, int pontos){
+      l.lock();
+      try{
+        topServidor.add(new Jogador(username,pontos));
+      }finally{
+        l.unlock();
+      }
+    }
+    
+    
+    
+    public String[] topPontuacaoString(){
+     l.lock();
+     String[] jog = new String[topPontuacao.size()];
+     int i = 0;
+     try{
+       for(Jogador j:topPontuacao){
+         //System.out.println("1 " + j.toString());
+         jog[i++] = j.toString();
+       }
+     }finally{
+       l.unlock();
+       return jog;
+     }
+   }
 }

@@ -23,7 +23,7 @@ public class Message extends Thread{
               String[] sp = s.split(" "); //dividir strings por espaços
               //System.out.println("Entrou");
               if(sp[0].equals("online")){
-                estado.addPlayer(new Jogador(sp[1],Double.parseDouble(sp[2])),new AvatarJogador(Double.parseDouble(sp[3]),Double.parseDouble(sp[4]),
+                estado.addPlayer(new Jogador(sp[1],Integer.parseInt(sp[2])),new AvatarJogador(Double.parseDouble(sp[3]),Double.parseDouble(sp[4]),
                                                                                         Double.parseDouble(sp[5]),Double.parseDouble(sp[6]),
                                                                                         Double.parseDouble(sp[7]),Double.parseDouble(sp[8]),
                                                                                         Double.parseDouble(sp[9]),
@@ -44,7 +44,11 @@ public class Message extends Thread{
               
               
               if(sp[0].equals("logout")){
-                estado.logout(sp[1]);
+                estado.logout(sp[1],-1);
+              }
+              
+              if(sp[0].equals("logout_time")){
+                estado.logout(sp[1],Integer.parseInt(sp[2]));
               }
               
               if(sp[0].equals("planeta")){
@@ -57,12 +61,19 @@ public class Message extends Thread{
               }
               
               if(sp[0].equals("dead")){
-                estado.retiraMorto(sp[1]);
+                estado.retiraMorto(sp[1],Integer.parseInt(sp[2]));
               }
               
               if(sp[0].equals("charge")){
                 estado.carrega(sp[1],Double.parseDouble(sp[2]),Double.parseDouble(sp[3]),Double.parseDouble(sp[4]));
               }
+              
+              if(sp[0].equals("pontos")){
+                estado.setPontuacoes(sp[1],Integer.parseInt(sp[2]));
+              }
+              if(sp[0].equals("topPontos")){
+                estado.topPontos(sp[1],Integer.parseInt(sp[2]));
+                }
               
             }
             
